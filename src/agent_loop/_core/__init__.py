@@ -1,11 +1,14 @@
 """Internal infrastructure shared across all commands."""
 
 from agent_loop._core.config import DEFAULT_CONFIG, load_config
+from agent_loop._core.implement_and_review import implement_and_review
 from agent_loop._core.logging import log, log_detail, log_step
 from agent_loop._core.shell import claude, ensure_label, gh, git, run
 from agent_loop._core.types import (
     LABEL_DESCRIPTIONS,
     Config,
+    ImplementAndReviewInput,
+    ImplementAndReviewResult,
     Label,
     ReviewEntry,
 )
@@ -16,6 +19,8 @@ __all__ = [
     "LABEL_DESCRIPTIONS",
     "Config",
     "ReviewEntry",
+    "ImplementAndReviewInput",
+    "ImplementAndReviewResult",
     # config
     "DEFAULT_CONFIG",
     "load_config",
@@ -29,4 +34,6 @@ __all__ = [
     "log",
     "log_step",
     "log_detail",
+    # engine
+    "implement_and_review",
 ]
