@@ -69,7 +69,27 @@ DEFAULT_CONFIG = {
         Analyze this codebase for issues. For each issue found, respond with a JSON array
         of objects, each with:
           - "title": short summary (suitable for a GitHub issue title)
-          - "body": detailed description including file paths, line numbers, and why it matters
+          - "body": issue description formatted in markdown using EXACTLY this structure:
+
+            #### 🐛 Problem
+            One or two sentences describing what is wrong.
+
+            #### 📍 Location
+            File path(s), line numbers, and function/method name(s).
+
+            #### 💥 Impact
+            What happens as a result. Why it matters. How severe is it.
+
+            #### 🔄 Current Behavior
+            What the code does now (briefly, with a short code snippet if helpful).
+
+            #### ✅ Expected Behavior
+            What the code should do instead.
+
+            #### 💡 Suggested Approach
+            A brief hint at a fix direction. Do not over-prescribe — the implementer
+            may find a better way.
+
           - "labels": optional list of additional labels (e.g. "bug", "refactor", "performance")
 
         Focus on real, actionable problems — not style nitpicks.
