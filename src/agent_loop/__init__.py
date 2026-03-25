@@ -249,18 +249,31 @@ def log_detail(msg: str, last_step: bool = False) -> None:
 def summarize_feedback(feedback: str, max_len: int = 80) -> str:
     """Extract a one-line summary from reviewer feedback."""
     # Look for the Required Changes section first
-    match = re.search(r"#### 🔧 Required Changes\s*\n(.+)", feedback)
+    match = re.search(r"#{1,4}\s*🔧\s*Required Changes\s*\n(.+)", feedback)
     if match:
-        summary = match.group(1).strip().rstrip(".")
+        summary = match.group(1).strip()
     else:
-        # Fall back to first substantive line after a heading
-        for line in feedback.split("\n"):
-            line = line.strip()
-            if line and not line.startswith("#") and not line.startswith("**") and not line.startswith("---"):
-                summary = line.rstrip(".")
-                break
+        # Look for the CONCERNS verdict and take the line after it
+        match = re.search(r"\*\*Verdict\*\*:\s*CONCERNS\s*\n+(.+)", feedback)
+        if match:
+            summary = match.group(1).strip()
         else:
-            summary = "(no details)"
+            # Fall back to first substantive line
+            for line in feedback.split("\n"):
+                stripped = line.strip()
+                if (stripped
+                    and not stripped.startswith("#")
+                    and not stripped.startswith("**")
+                    and not stripped.startswith("---")
+                    and not stripped.startswith(">")):
+                    summary = stripped
+                    break
+            else:
+                summary = "(no details)"
+    # Clean up markdown artifacts
+    summary = re.sub(r"\*\*(.+?)\*\*", r"\1", summary)  # remove bold
+    summary = re.sub(r"`(.+?)`", r"\1", summary)  # remove inline code
+    summary = summary.lstrip("- ").lstrip("* ")  # remove list markers
     if len(summary) > max_len:
         summary = summary[:max_len - 1] + "…"
     return summary
@@ -496,7 +509,7 @@ def fix_single_issue(
             })
 
             if approved:
-                log_step(f"🔎 Review {iteration}/{max_iterations} — ✅ Approved ({review_elapsed}s)", last=True)
+                log_step(f"🔎 Review {iteration}/{max_iterations} — ✅ Approved ({review_elapsed}s)")
                 converged = True
                 break
 
