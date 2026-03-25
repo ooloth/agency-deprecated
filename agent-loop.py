@@ -71,24 +71,25 @@ DEFAULT_CONFIG = {
           - "title": short summary (suitable for a GitHub issue title)
           - "body": issue description formatted in markdown using EXACTLY this structure:
 
-            #### 🐛 Problem
+            ### 🐛 Problem
             One or two sentences describing what is wrong.
 
-            #### 📍 Location
-            File path(s), line numbers, and function/method name(s).
+            ### 📍 Location
+            - `file.py:42` — `function_name()`
+            - (list each relevant location as a bullet)
 
-            #### 💥 Impact
-            What happens as a result. Why it matters. How severe is it.
+            ### 💥 Impact
+            - What happens as a result
+            - Why it matters
+            - How severe (e.g. crash, silent data loss, cosmetic)
 
-            #### 🔄 Current Behavior
+            ### 🔄 Current Behavior
             What the code does now (briefly, with a short code snippet if helpful).
 
-            #### ✅ Expected Behavior
+            ### ✅ Expected Behavior
             What the code should do instead.
 
-            #### 💡 Suggested Approach
-            A brief hint at a fix direction. Do not over-prescribe — the implementer
-            may find a better way.
+            Use bullet lists instead of paragraphs where possible. Keep it scannable.
 
           - "labels": optional list of additional labels (e.g. "bug", "refactor", "performance")
 
