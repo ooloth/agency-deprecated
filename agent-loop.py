@@ -146,10 +146,13 @@ def git(*args: str) -> str:
     return run(["git", *args])
 
 
-def claude(prompt: str, project_dir: Path) -> str:
+def claude(prompt: str, project_dir: Path, allowed_tools: list[str] | None = None) -> str:
     """Run a prompt through the claude CLI."""
+    cmd = ["claude", "-p", prompt]
+    if allowed_tools:
+        cmd += ["--allowedTools", ",".join(allowed_tools)]
     result = subprocess.run(
-        ["claude", "-p", prompt],
+        cmd,
         capture_output=True,
         text=True,
         cwd=project_dir,
@@ -294,7 +297,7 @@ def fix_single_issue(
             fix_prompt = f"Project context:\n{config['context']}\n\n{fix_prompt}"
 
         print("  🤖 Agent is implementing fix...")
-        claude(fix_prompt, project_dir)
+        claude(fix_prompt, project_dir, allowed_tools=["Read", "Write", "Edit", "Glob", "Grep"])
 
         # Stage changes
         git("add", "-A")
@@ -320,7 +323,7 @@ def fix_single_issue(
             if config["context"]:
                 review_prompt = f"Project context:\n{config['context']}\n\n{review_prompt}"
 
-            feedback = claude(review_prompt, project_dir)
+            feedback = claude(review_prompt, project_dir, allowed_tools=["Read", "Glob", "Grep"])
             approved = bool(re.search(r"\bLGTM\b", feedback, re.IGNORECASE))
 
             review_log.append({
@@ -347,7 +350,7 @@ def fix_single_issue(
                 f"Please address the concerns."
             )
             print("  🤖 Agent is addressing feedback...")
-            claude(fix_feedback_prompt, project_dir)
+            claude(fix_feedback_prompt, project_dir, allowed_tools=["Read", "Write", "Edit", "Glob", "Grep"])
             git("add", "-A")
 
         # Commit and push
