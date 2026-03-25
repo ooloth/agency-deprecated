@@ -135,7 +135,8 @@ def load_config(project_dir: Path) -> dict:
     config_file = project_dir / ".agent-loop.yml"
     if config_file.exists():
         with open(config_file) as f:
-            overrides = yaml.safe_load(f) or {}
+            # Filter out null values so they fall back to defaults rather than overriding them
+            overrides = {k: v for k, v in (yaml.safe_load(f) or {}).items() if v is not None}
         config.update(overrides)
     return config
 
