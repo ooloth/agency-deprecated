@@ -99,14 +99,20 @@ DEFAULT_CONFIG = {
         by a simpler approach (e.g. using a different value, removing an unnecessary
         constraint), suggest that simpler approach instead of requesting error handling.
 
-        You MUST check each of the following and state your finding for each:
-        1. Correctness: Does the change actually fix the described issue? Fully, not partially?
-        2. Regressions: Could this break existing behavior? Consider all callers and code paths.
-        3. Edge cases: Are realistic boundary conditions and error cases handled?
-        4. Completeness: Is every aspect of the issue addressed? Are there leftover TODOs or gaps?
+        You MUST check each of the following IN ORDER and state your finding for each:
+        1. Approach: Is this the right way to solve the problem? Is there a simpler, more
+           idiomatic, or more robust approach the implementer should have taken instead?
+           Consider whether the problem can be avoided entirely rather than handled.
+           If the approach is wrong, stop here — do not review the details of a solution
+           that should be rewritten.
+        2. Correctness: Does the change actually fix the described issue? Fully, not partially?
+        3. Regressions: Could this break existing behavior? Consider all callers and code paths.
+        4. Edge cases: Are realistic boundary conditions and error cases handled?
+        5. Completeness: Is every aspect of the issue addressed? Are there leftover TODOs or gaps?
 
         Structure your response as:
 
+        **Approach**: <your assessment — is this the right solution, or is there a better way?>
         **Correctness**: <your finding>
         **Regressions**: <your finding>
         **Edge cases**: <your finding>
