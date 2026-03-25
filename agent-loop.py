@@ -185,6 +185,55 @@ def ensure_label(label: Label) -> None:
     gh("label", "create", label.value, "--force", "--description", LABEL_DESCRIPTIONS[label])
 
 
+def format_review_comment(review_log: list[dict], converged: bool, max_iterations: int) -> str:
+    """Format the review trail as a readable GitHub comment."""
+    total = len(review_log)
+    approved_count = sum(1 for r in review_log if r["approved"])
+    rejected_count = total - approved_count
+
+    # Header with status
+    if converged:
+        status = f"✅ Passed after {total} iteration{'s' if total != 1 else ''}"
+    else:
+        status = f"⚠️ Did not converge after {max_iterations} iterations"
+
+    lines = [
+        f"## 🔍 Agent Review — {status}",
+        "",
+        f"> **{total}** iteration{'s' if total != 1 else ''}"
+        f" · **{approved_count}** approved"
+        f" · **{rejected_count}** requested changes",
+        "",
+        "---",
+        "",
+    ]
+
+    for r in review_log:
+        iteration = r["iteration"]
+        approved = r["approved"]
+        feedback = r["feedback"]
+        icon = "✅" if approved else "🔄"
+        label = "Approved" if approved else "Changes requested"
+        is_last = iteration == total
+
+        # Last iteration is open, previous ones are collapsed
+        if is_last:
+            lines.append(f"### {icon} Iteration {iteration} — {label}")
+            lines.append("")
+            lines.append(feedback)
+            lines.append("")
+        else:
+            lines.append(f"<details>")
+            lines.append(f"<summary>{icon} <strong>Iteration {iteration}</strong> — {label}</summary>")
+            lines.append("")
+            lines.append(feedback)
+            lines.append("")
+            lines.append("</details>")
+            lines.append("")
+
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
@@ -402,14 +451,7 @@ def fix_single_issue(
         )
 
         # Post review trail as a PR comment
-        review_trail = "\n".join(
-            f"### Iteration {r['iteration']}: {'✅ Approved' if r['approved'] else '⚠️ Changes requested'}\n\n{r['feedback']}\n"
-            for r in review_log
-        )
-        review_comment = (
-            f"## Agent Review ({'passed' if converged else f'did not converge after {max_iterations} iterations'})\n\n"
-            f"{review_trail}"
-        )
+        review_comment = format_review_comment(review_log, converged, max_iterations)
         gh("pr", "comment", branch, "--body", review_comment)
 
         pr_opened = True
