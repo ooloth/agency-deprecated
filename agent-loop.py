@@ -215,8 +215,22 @@ def cmd_analyze(project_dir: Path, config: dict) -> None:
     ensure_label(Label.AGENT_REPORTED)
     ensure_label(Label.NEEDS_HUMAN_REVIEW)
 
+    # Fetch open issue titles to skip re-creating issues that already exist.
+    # Only open issues are checked — closed issues don't block re-detection.
+    existing_json = gh("issue", "list", "--state", "open", "--json", "title", "--limit", "500")
+    raw_issues = json.loads(existing_json)
+    if len(raw_issues) >= 500:
+        print("⚠️  500+ open issues found; deduplication may be incomplete.", file=sys.stderr)
+    existing_titles = {i["title"] for i in raw_issues}
+
+    created = 0
     for issue in issues:
         title = issue["title"]
+
+        if title in existing_titles:
+            print(f"  ⏭️  Skipped (open issue already exists): {title}")
+            continue
+
         body = issue.get("body", "")
         extra_labels = issue.get("labels", [])
 
@@ -228,8 +242,9 @@ def cmd_analyze(project_dir: Path, config: dict) -> None:
         label_args = [arg for l in all_labels for arg in ("--label", str(l))]
         gh("issue", "create", "--title", title, "--body", body, *label_args)
         print(f"  📋 Created: {title}")
+        created += 1
 
-    print(f"\n✅ Created {len(issues)} issue(s).")
+    print(f"\n✅ Created {created} issue(s) ({len(issues) - created} skipped as duplicates).")
     print(f"   Review them on GitHub and add '{Label.READY_TO_FIX}' when ready.")
 
 
