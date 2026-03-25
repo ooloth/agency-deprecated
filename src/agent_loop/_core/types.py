@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
 from typing import TypedDict
 
 
@@ -48,3 +50,21 @@ class ReviewEntry(TypedDict):
     iteration: int
     approved: bool
     feedback: str
+
+
+@dataclass(frozen=True)
+class ImplementAndReviewInput:
+    title: str
+    body: str
+    project_dir: Path
+    max_iterations: int
+    context: str
+    fix_prompt_template: str
+    review_prompt: str
+
+
+@dataclass(frozen=True)
+class ImplementAndReviewResult:
+    review_log: list[ReviewEntry]
+    converged: bool
+    has_changes: bool
