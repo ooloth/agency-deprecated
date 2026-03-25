@@ -174,19 +174,13 @@ def cmd_analyze(project_dir: Path, config: dict) -> None:
 
     raw = claude(prompt, project_dir)
 
-    # Parse JSON from response (handle markdown code fences)
+    # Parse JSON from response (handle markdown code fences).
+    # Extract only the first fenced block to avoid concatenating multiple blocks
+    # (e.g. a ```json block followed by a plain ``` explanation block).
     json_str = raw
-    if "```" in json_str:
-        lines = json_str.split("\n")
-        in_block = False
-        block_lines = []
-        for line in lines:
-            if line.startswith("```"):
-                in_block = not in_block
-                continue
-            if in_block:
-                block_lines.append(line)
-        json_str = "\n".join(block_lines)
+    fenced = re.search(r"```(?:json)?\s*\n([\s\S]*?)\n```", json_str)
+    if fenced:
+        json_str = fenced.group(1)
 
     try:
         issues = json.loads(json_str)
