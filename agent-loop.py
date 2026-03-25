@@ -15,6 +15,7 @@ Workflow:
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import textwrap
@@ -294,6 +295,8 @@ def fix_single_issue(
 
         # Review loop
         iteration = 0
+        review_log: list[dict] = []
+        converged = False
         while iteration < max_iterations:
             iteration += 1
             print(f"\n  🔎 Review iteration {iteration}/{max_iterations}...")
@@ -308,12 +311,20 @@ def fix_single_issue(
                 review_prompt = f"Project context:\n{config['context']}\n\n{review_prompt}"
 
             feedback = claude(review_prompt, project_dir)
+            approved = bool(re.search(r"\bLGTM\b", feedback, re.IGNORECASE))
 
-            if "LGTM" in feedback.upper().split():
+            review_log.append({
+                "iteration": iteration,
+                "approved": approved,
+                "feedback": feedback,
+            })
+
+            print(f"  📝 Reviewer response:\n{textwrap.indent(feedback, '     ')}\n")
+
+            if approved:
                 print("  ✅ Review passed!")
+                converged = True
                 break
-
-            print(f"  💬 Reviewer concerns:\n{textwrap.indent(feedback, '     ')}\n")
 
             if iteration >= max_iterations:
                 print(f"  ⚠️  Max iterations ({max_iterations}) reached. Opening PR with concerns noted.")
@@ -341,10 +352,14 @@ def fix_single_issue(
         git("push", "-u", "origin", branch)
 
         # Open PR — "Fixes #N" will close the issue on merge
-        converged = iteration < max_iterations
+        review_trail = "\n".join(
+            f"### Iteration {r['iteration']}: {'✅ Approved' if r['approved'] else '⚠️ Changes requested'}\n\n{r['feedback']}\n"
+            for r in review_log
+        )
         pr_body = (
             f"Fixes #{number}\n\n"
-            f"Agent review {'passed' if converged else f'did not converge after {max_iterations} iterations'}."
+            f"## Agent Review ({'passed' if converged else f'did not converge after {max_iterations} iterations'})\n\n"
+            f"{review_trail}"
         )
         gh(
             "pr", "create",
