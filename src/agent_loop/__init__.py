@@ -359,19 +359,9 @@ def cmd_analyze(project_dir: Path, config: dict) -> None:
     t0 = time.monotonic()
     raw = claude(prompt, project_dir)
 
-    # Parse JSON from response (handle markdown code fences)
-    json_str = raw
-    if "```" in json_str:
-        lines = json_str.split("\n")
-        in_block = False
-        block_lines = []
-        for line in lines:
-            if line.startswith("```"):
-                in_block = not in_block
-                continue
-            if in_block:
-                block_lines.append(line)
-        json_str = "\n".join(block_lines)
+    # Parse JSON from response (extract first fenced block if present)
+    match = re.search(r"```(?:\w+)?\n(.*?)```", raw, re.DOTALL)
+    json_str = match.group(1) if match else raw
 
     try:
         issues = json.loads(json_str)
