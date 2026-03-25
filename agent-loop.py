@@ -15,6 +15,7 @@ Workflow:
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import textwrap
@@ -309,7 +310,7 @@ def fix_single_issue(
 
             feedback = claude(review_prompt, project_dir)
 
-            if "LGTM" in feedback.upper().split():
+            if re.search(r"\bLGTM\b", feedback, re.IGNORECASE):
                 print("  ✅ Review passed!")
                 break
 
