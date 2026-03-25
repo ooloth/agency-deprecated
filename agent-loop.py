@@ -71,22 +71,22 @@ DEFAULT_CONFIG = {
           - "title": short summary (suitable for a GitHub issue title)
           - "body": issue description formatted in markdown using EXACTLY this structure:
 
-            ### 🐛 Problem
+            ## 🐛 Problem
             One or two sentences describing what is wrong.
 
-            ### 📍 Location
+            ## 📍 Location
             - `file.py:42` — `function_name()`
             - (list each relevant location as a bullet)
 
-            ### 💥 Impact
+            ## 💥 Impact
             - What happens as a result
             - Why it matters
             - How severe (e.g. crash, silent data loss, cosmetic)
 
-            ### 🔄 Current Behavior
+            ## 🔄 Current Behavior
             What the code does now (briefly, with a short code snippet if helpful).
 
-            ### ✅ Expected Behavior
+            ## ✅ Expected Behavior
             What the code should do instead.
 
             Use bullet lists instead of paragraphs where possible. Keep it scannable.
