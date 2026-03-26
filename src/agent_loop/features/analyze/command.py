@@ -1,6 +1,5 @@
 import json
 import time
-from pathlib import Path
 
 from agent_loop.domain.context import AppContext
 from agent_loop.domain.labels import Label
@@ -10,7 +9,7 @@ from agent_loop.features.analyze.parse import extract_json_from_response
 from agent_loop.features.analyze.prompts import ANALYZE_PROMPT
 
 
-def cmd_analyze(project_dir: Path, ctx: AppContext) -> None:
+def cmd_analyze(ctx: AppContext) -> None:
     """Analyze the codebase and create GitHub issues."""
     log("🔍 Analyzing codebase...")
 
@@ -19,7 +18,7 @@ def cmd_analyze(project_dir: Path, ctx: AppContext) -> None:
         prompt = f"Project context:\n{ctx.config['context']}\n\n{prompt}"
 
     t0 = time.monotonic()
-    raw = claude(prompt, project_dir)
+    raw = claude(prompt, ctx.project_dir)
 
     issues = extract_json_from_response(raw)
 

@@ -1,7 +1,6 @@
 import json
 import signal
 import time
-from pathlib import Path
 
 from agent_loop.domain.context import AppContext
 from agent_loop.domain.labels import Label
@@ -11,12 +10,7 @@ from agent_loop.features.analyze.command import cmd_analyze
 from agent_loop.features.fix.command import cmd_fix
 
 
-def cmd_watch(
-    project_dir: Path,
-    ctx: AppContext,
-    interval: int,
-    max_open_issues: int,
-) -> None:
+def cmd_watch(ctx: AppContext, interval: int, max_open_issues: int) -> None:
     """Poll for work: fix ready issues, analyze when queue is low."""
     stopping = False
 
@@ -29,7 +23,7 @@ def cmd_watch(
     signal.signal(signal.SIGTERM, handle_signal)
 
     log(
-        f"👀 Watching {project_dir.name} (interval={interval}s, max_open={max_open_issues})"
+        f"👀 Watching {ctx.project_dir.name} (interval={interval}s, max_open={max_open_issues})"
     )
     log("   Press Ctrl+C to stop gracefully.")
     print()
@@ -51,7 +45,7 @@ def cmd_watch(
         ready_issues = json.loads(ready_json)
 
         if ready_issues:
-            cmd_fix(project_dir, ctx)
+            cmd_fix(ctx)
             if stopping:
                 break
         else:
@@ -78,7 +72,7 @@ def cmd_watch(
             log(
                 f"🔍 {open_count} issue(s) awaiting review (cap: {max_open_issues}) — running analysis"
             )
-            cmd_analyze(project_dir, ctx)
+            cmd_analyze(ctx)
 
         if stopping:
             break

@@ -52,16 +52,11 @@ def main() -> None:
 
     args = parser.parse_args()
     project_dir = args.project_dir.resolve()
-    ctx = AppContext(config=load_config(project_dir))
+    ctx = AppContext(project_dir=project_dir, config=load_config(project_dir))
 
     if args.command == "analyze":
-        cmd_analyze(project_dir, ctx)
+        cmd_analyze(ctx)
     elif args.command == "fix":
-        cmd_fix(project_dir, ctx, issue_number=args.issue)
+        cmd_fix(ctx, issue_number=args.issue)
     elif args.command == "watch":
-        cmd_watch(
-            project_dir,
-            ctx,
-            interval=args.interval,
-            max_open_issues=args.max_open_issues,
-        )
+        cmd_watch(ctx, interval=args.interval, max_open_issues=args.max_open_issues)
