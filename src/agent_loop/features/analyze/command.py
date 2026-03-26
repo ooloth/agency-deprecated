@@ -48,7 +48,7 @@ def cmd_analyze(ctx: AppContext) -> None:
     existing_titles = ctx.tracker.list_open_titles()
 
     created = 0
-    for issue in issues:
+    for i, issue in enumerate(issues):
         found = FoundIssue(
             title=issue["title"],
             body=issue.get("body", ""),
@@ -59,7 +59,7 @@ def cmd_analyze(ctx: AppContext) -> None:
             continue
 
         ctx.tracker.create_issue(found)
-        is_last = issue is issues[-1]
+        is_last = i == len(issues) - 1
         connector = "└──" if is_last else "├──"
         log(f"{connector} 📋 Created: {found.title}")
         created += 1
