@@ -1,7 +1,7 @@
-import subprocess
 from pathlib import Path
 
-from agent_loop.domain.errors import AgentError
+from agent_loop.domain.errors import AgentError, SubprocessError
+from agent_loop.io.process import run
 
 # Read-only tools for analysis and review (no filesystem writes or shell execution)
 READ_ONLY_TOOLS = "Read,Glob,Grep"
@@ -17,12 +17,10 @@ class ClaudeCliBackend:
         self._allowed_tools = allowed_tools
 
     def run(self, prompt: str) -> str:
-        result = subprocess.run(
-            ["claude", "-p", prompt, "--allowedTools", self._allowed_tools],
-            capture_output=True,
-            text=True,
-            cwd=self._project_dir,
-        )
-        if result.returncode != 0:
-            raise AgentError(stderr=result.stderr or "")
-        return result.stdout.strip()
+        try:
+            return run(
+                ["claude", "-p", prompt, "--allowedTools", self._allowed_tools],
+                cwd=self._project_dir,
+            )
+        except SubprocessError as exc:
+            raise AgentError(stderr=exc.stderr) from exc

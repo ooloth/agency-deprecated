@@ -1,15 +1,22 @@
 import subprocess
+from pathlib import Path
 
 from agent_loop.domain.errors import SubprocessError
 
 
-def run(cmd: list[str], check: bool = True, capture: bool = True) -> str:
+def run(
+    cmd: list[str],
+    *,
+    check: bool = True,
+    capture: bool = True,
+    cwd: Path | None = None,
+) -> str:
     """Run a subprocess command and return stdout.
 
     Raises SubprocessError on non-zero exit (when check=True) instead of
     calling sys.exit, so callers higher up can decide how to handle it.
     """
-    result = subprocess.run(cmd, capture_output=capture, text=True)
+    result = subprocess.run(cmd, capture_output=capture, text=True, cwd=cwd)
     if check and result.returncode != 0:
         raise SubprocessError(cmd=" ".join(cmd), stderr=result.stderr or "")
     return result.stdout.strip() if capture else ""
