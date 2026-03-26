@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 
 from agent_loop.domain.context import AppContext
-from agent_loop.domain.types import Label
+from agent_loop.domain.labels import Label
 from agent_loop.io.logging import log
 from agent_loop.io.shell import claude, ensure_label, gh
 from agent_loop.features.analyze.parse import extract_json_from_response

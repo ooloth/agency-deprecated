@@ -2,7 +2,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from agent_loop.domain.types import Label, LABEL_DESCRIPTIONS
+from agent_loop.domain.labels import Label, LABEL_DESCRIPTIONS
 
 
 def run(cmd: list[str], check: bool = True, capture: bool = True) -> str:

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import yaml
 
-from agent_loop.domain.types import Config, DEFAULT_CONFIG
+from agent_loop.domain.config import Config, DEFAULT_CONFIG
 
 
 def load_config(project_dir: Path) -> Config:

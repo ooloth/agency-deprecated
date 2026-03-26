@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from agent_loop.domain.types import Config
+from agent_loop.domain.config import Config
 
 
 @dataclass(frozen=True)

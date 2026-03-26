@@ -2,7 +2,7 @@
 
 from typing import Protocol
 
-from agent_loop.domain.types import FoundIssue, Issue
+from agent_loop.domain.issues import FoundIssue, Issue
 
 
 class AgentBackend(Protocol):

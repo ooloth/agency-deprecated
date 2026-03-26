@@ -1,6 +1,10 @@
-from dataclasses import dataclass, field
+# TODO: Label and LABEL_DESCRIPTIONS are GitHub-specific mechanisms for expressing
+# workflow state (origin, triage, lock) via issue labels. In a different tracker
+# (Linear, Jira), the same concepts would be statuses or custom fields — not labels.
+# Once GitHubTracker is extracted from io/shell.py, these move there as internal
+# implementation details. Features will call tracker.claim_issue() etc. and never
+# reference Label directly.
 from enum import StrEnum
-from typing import TypedDict
 
 
 class Label(StrEnum):
@@ -30,41 +34,3 @@ LABEL_DESCRIPTIONS = {
     Label.READY_TO_FIX: "Approved for agent to fix",
     Label.AGENT_FIX_IN_PROGRESS: "Agent is working on a fix",
 }
-
-
-class _ConfigRequired(TypedDict):
-    max_iterations: int
-    context: str
-
-
-class Config(_ConfigRequired, total=False):
-    # Prompt overrides — optional because commands fall back to their own defaults
-    # when these keys are absent. Users can set them in .agent-loop.yml.
-    analyze_prompt: str
-    fix_prompt_template: str
-    review_prompt: str
-
-
-DEFAULT_CONFIG: Config = {
-    "max_iterations": 5,
-    "context": "",
-}
-
-
-@dataclass(frozen=True)
-class Issue:
-    """A work item in the issue tracker."""
-
-    number: int
-    title: str
-    body: str
-    labels: frozenset[str]
-
-
-@dataclass(frozen=True)
-class FoundIssue:
-    """An issue discovered by the analyzer, before it is filed in a tracker."""
-
-    title: str
-    body: str
-    labels: list[str] = field(default_factory=list)
