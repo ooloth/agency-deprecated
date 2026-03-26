@@ -2,6 +2,7 @@ import json
 import time
 from pathlib import Path
 
+from agent_loop.domain.context import AppContext
 from agent_loop.domain.types import Label
 from agent_loop.io.logging import log, log_step
 from agent_loop.io.shell import ensure_label, gh, git
@@ -10,9 +11,9 @@ from agent_loop.features.fix.prompts import FIX_PROMPT_TEMPLATE, REVIEW_PROMPT
 from agent_loop.features.fix.review import format_review_comment
 
 
-def cmd_fix(project_dir: Path, config: dict, issue_number: int | None = None) -> None:
+def cmd_fix(project_dir: Path, ctx: AppContext, issue_number: int | None = None) -> None:
     """Pick up ready-to-fix issues and run the fix+review loop."""
-    max_iterations = config["max_iterations"]
+    max_iterations = ctx.config["max_iterations"]
 
     # Get issues to fix
     if issue_number:
@@ -52,12 +53,12 @@ def cmd_fix(project_dir: Path, config: dict, issue_number: int | None = None) ->
         return
 
     for issue in issues:
-        fix_single_issue(project_dir, config, issue, max_iterations)
+        fix_single_issue(project_dir, ctx, issue, max_iterations)
 
 
 def fix_single_issue(
     project_dir: Path,
-    config: dict,
+    ctx: AppContext,
     issue: dict,
     max_iterations: int,
 ) -> None:
@@ -93,9 +94,9 @@ def fix_single_issue(
             body=body,
             project_dir=project_dir,
             max_iterations=max_iterations,
-            context=config.get("context", ""),
-            fix_prompt_template=config.get("fix_prompt_template", FIX_PROMPT_TEMPLATE),
-            review_prompt=config.get("review_prompt", REVIEW_PROMPT),
+            context=ctx.config.get("context", ""),
+            fix_prompt_template=ctx.config.get("fix_prompt_template", FIX_PROMPT_TEMPLATE),
+            review_prompt=ctx.config.get("review_prompt", REVIEW_PROMPT),
         )
         result = implement_and_review(task)
 

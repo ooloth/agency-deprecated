@@ -2,6 +2,7 @@ import argparse
 import textwrap
 from pathlib import Path
 
+from agent_loop.domain.context import AppContext
 from agent_loop.io.config import load_config
 from agent_loop.features.analyze.command import cmd_analyze
 from agent_loop.features.fix.command import cmd_fix
@@ -51,16 +52,16 @@ def main() -> None:
 
     args = parser.parse_args()
     project_dir = args.project_dir.resolve()
-    config = load_config(project_dir)
+    ctx = AppContext(config=load_config(project_dir))
 
     if args.command == "analyze":
-        cmd_analyze(project_dir, config)
+        cmd_analyze(project_dir, ctx)
     elif args.command == "fix":
-        cmd_fix(project_dir, config, issue_number=args.issue)
+        cmd_fix(project_dir, ctx, issue_number=args.issue)
     elif args.command == "watch":
         cmd_watch(
             project_dir,
-            config,
+            ctx,
             interval=args.interval,
             max_open_issues=args.max_open_issues,
         )

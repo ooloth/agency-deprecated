@@ -3,6 +3,7 @@ import signal
 import time
 from pathlib import Path
 
+from agent_loop.domain.context import AppContext
 from agent_loop.domain.types import Label
 from agent_loop.io.logging import log
 from agent_loop.io.shell import gh
@@ -12,7 +13,7 @@ from agent_loop.features.fix.command import cmd_fix
 
 def cmd_watch(
     project_dir: Path,
-    config: dict,
+    ctx: AppContext,
     interval: int,
     max_open_issues: int,
 ) -> None:
@@ -50,7 +51,7 @@ def cmd_watch(
         ready_issues = json.loads(ready_json)
 
         if ready_issues:
-            cmd_fix(project_dir, config)
+            cmd_fix(project_dir, ctx)
             if stopping:
                 break
         else:
@@ -77,7 +78,7 @@ def cmd_watch(
             log(
                 f"🔍 {open_count} issue(s) awaiting review (cap: {max_open_issues}) — running analysis"
             )
-            cmd_analyze(project_dir, config)
+            cmd_analyze(project_dir, ctx)
 
         if stopping:
             break
