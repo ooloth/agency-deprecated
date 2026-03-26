@@ -50,24 +50,23 @@ explicit in the type rather than a runtime detail.
 
 ## Known adapters
 
-### `ClaudeCliBackend` (current, to be extracted)
+### `ClaudeCliBackend` (current)
 
-Wraps the `claude` CLI subprocess. The existing `claude()` function in
-`_core/shell.py` becomes the implementation of `run()`.
+Wraps the `claude` CLI subprocess. Lives in `io/adapters/claude_cli.py`.
 
 ```python
 class ClaudeCliBackend:
-    def __init__(self, project_dir: Path, allowed_tools: str) -> None: ...
+    def __init__(self, project_dir: Path, allowed_tools: str = EDIT_TOOLS) -> None: ...
     def run(self, prompt: str) -> str: ...
 ```
 
 Construction example:
 ```python
-_EDIT_TOOLS = "Read,Write,Edit,MultiEdit,Glob,Grep,Bash"
-_READ_ONLY_TOOLS = "Read,Glob,Grep"
+EDIT_TOOLS = "Read,Write,Edit,MultiEdit,Glob,Grep,Bash"
+READ_ONLY_TOOLS = "Read,Glob,Grep"
 
-implement_agent = ClaudeCliBackend(project_dir, allowed_tools=_EDIT_TOOLS)
-review_agent = ClaudeCliBackend(project_dir, allowed_tools=_READ_ONLY_TOOLS)
+implement_agent = ClaudeCliBackend(project_dir, allowed_tools=EDIT_TOOLS)
+review_agent = ClaudeCliBackend(project_dir, allowed_tools=READ_ONLY_TOOLS)
 ```
 
 ### Future adapters
