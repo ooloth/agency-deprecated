@@ -79,6 +79,18 @@ class GitBackend:
 `GitBackend` has no constructor — it relies on the process's working directory
 rather than an explicit `project_dir` argument.
 
+#### Why `BranchSession` takes `GitBackend`, not `VCSBackend`
+
+`BranchSession` needs the workflow methods (`checkout`, `pull`, `commit`, `push`,
+etc.) that are intentionally outside the `VCSBackend` protocol. Widening the
+protocol to include them would blur the engine/pipeline boundary — `VCSBackend`
+is scoped to what the engine needs, not what the full workflow needs.
+
+Until a second VCS adapter exists, taking the concrete `GitBackend` is the right
+call. If a `GitLabBackend` or similar is added, the natural step is either a
+second `WorkflowVCSBackend` protocol or a shared base class — not widening the
+existing engine protocol.
+
 ### Future adapters
 
 - `NullVCSBackend` — no-op staging, returns a preset diff string; useful for
