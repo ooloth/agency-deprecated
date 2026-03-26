@@ -5,6 +5,7 @@ from agent_loop.domain.issues import Issue
 from agent_loop.io.adapters.claude_cli import EDIT_TOOLS, READ_ONLY_TOOLS, ClaudeCliBackend
 from agent_loop.io.adapters.git import GitBackend
 from agent_loop.io.logging import log, log_step
+from agent_loop.features.fix.branch_session import BranchSession
 from agent_loop.features.fix.engine import ImplementAndReviewInput, implement_and_review
 from agent_loop.features.fix.prompts import FIX_PROMPT_TEMPLATE, REVIEW_PROMPT
 from agent_loop.features.fix.review import format_review_comment
@@ -43,29 +44,12 @@ def fix_single_issue(ctx: AppContext, issue: Issue, max_iterations: int) -> None
     number = issue.number
     title = issue.title
     body = issue.body
-    branch = f"fix/issue-{number}"
 
-    # Local git backend for branch workflow operations
     git = GitBackend()
-
     fix_start = time.monotonic()
     log(f"🔧 #{number} {title}")
 
-    # Create branch off the repo's default branch (not whatever is currently checked out).
-    # Pull before claiming the issue so a network failure doesn't leave the lock label stuck.
-    default_branch = ctx.tracker.get_default_branch()
-    git.checkout(default_branch)
-    git.pull(default_branch)
-
-    # Claim the issue — add lock label
-    ctx.tracker.claim_issue(number)
-
-    # -B resets the branch if a prior attempt left it behind
-    git.checkout_new_branch(branch)
-
-    pr_opened = False
-
-    try:
+    with BranchSession(issue, ctx.tracker, git) as session:
         implement_agent = ClaudeCliBackend(ctx.project_dir, allowed_tools=EDIT_TOOLS)
         review_agent = ClaudeCliBackend(ctx.project_dir, allowed_tools=READ_ONLY_TOOLS)
 
@@ -77,14 +61,11 @@ def fix_single_issue(ctx: AppContext, issue: Issue, max_iterations: int) -> None
             vcs=git,
             max_iterations=max_iterations,
             context=ctx.config.get("context", ""),
-            fix_prompt_template=ctx.config.get(
-                "fix_prompt_template", FIX_PROMPT_TEMPLATE
-            ),
+            fix_prompt_template=ctx.config.get("fix_prompt_template", FIX_PROMPT_TEMPLATE),
             review_prompt=ctx.config.get("review_prompt", REVIEW_PROMPT),
         )
         result = implement_and_review(task)
 
-        # Commit and push
         if not result.has_changes:
             log_step(f"⚠️  No changes for #{number}. May already be fixed.", last=True)
             ctx.tracker.comment_on_issue(
@@ -95,27 +76,18 @@ def fix_single_issue(ctx: AppContext, issue: Issue, max_iterations: int) -> None
             ctx.tracker.remove_ready_label(number)
             return
 
-        git.commit(f"fix: address issue #{number} - {title}")
-        git.push(branch)
+        session.commit_and_push()
 
         # Open PR — "Fixes #N" will close the issue on merge
         pr_ref = ctx.tracker.open_pr(
             title=f"Fix #{number}: {title}",
             body=f"Fixes #{number}",
-            head=branch,
+            head=session.branch,
         )
 
         # Post review trail as a PR comment
         review_comment = format_review_comment(result.review_log, result.converged, max_iterations)
         ctx.tracker.comment_on_pr(pr_ref, review_comment)
 
-        pr_opened = True
         total_elapsed = int(time.monotonic() - fix_start)
         log_step(f"🎉 PR opened ({total_elapsed}s total)", last=True)
-
-    finally:
-        # Always return to default branch and clean up if no PR was opened
-        git.checkout(default_branch)
-        if not pr_opened:
-            git.delete_branch(branch)
-            ctx.tracker.release_issue(number)
