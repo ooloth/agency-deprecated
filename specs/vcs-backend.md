@@ -11,21 +11,10 @@ engine in `BranchSession` and are not part of this protocol.
 
 ## Protocol definition
 
-```python
-from typing import Protocol
-
-
-class VCSBackend(Protocol):
-    def stage_all(self) -> None:
-        """Stage all current changes (equivalent to `git add -A`)."""
-        ...
-
-    def diff_staged(self) -> str:
-        """Return the staged diff as a string (equivalent to `git diff --cached`).
-
-        Returns an empty string if there are no staged changes.
-        """
-        ...
+```
+VCSBackend:
+  stage_all()     -> void    -- stage all current changes (git add -A equivalent)
+  diff_staged()   -> string  -- return staged diff; empty string if no staged changes
 ```
 
 ---
@@ -33,7 +22,7 @@ class VCSBackend(Protocol):
 ## Contract
 
 - `stage_all()` is idempotent. Calling it when nothing has changed is safe.
-- `diff_staged()` returns an empty string (not None, not an error) when there
+- `diff_staged()` returns an empty string (not null, not an error) when there
   are no staged changes. Callers use the empty-string check to detect "no work
   was done" and short-circuit the review loop.
 - Both methods operate on the current working directory.
@@ -42,11 +31,10 @@ class VCSBackend(Protocol):
 
 ## How it fits into ImplementAndReviewInput
 
-```python
-@dataclass(frozen=True)
-class ImplementAndReviewInput:
-    ...
-    vcs: VCSBackend
+```
+ImplementAndReviewInput:
+  ...
+  vcs: VCSBackend
 ```
 
 ---
@@ -55,40 +43,34 @@ class ImplementAndReviewInput:
 
 ### `GitBackend` (current)
 
-Wraps the `git` CLI via `io/process.py`'s `run()` helper. Lives in
-`io/adapters/git.py`.
+Implements `VCSBackend` and also exposes the workflow operations needed by
+`BranchSession`:
 
-Implements the `VCSBackend` protocol (`stage_all`, `diff_staged`) and also
-exposes the branch workflow operations used by `BranchSession`:
-
-```python
-class GitBackend:
-    # VCSBackend protocol
-    def stage_all(self) -> None: ...          # git add -A
-    def diff_staged(self) -> str: ...         # git diff --cached
-
-    # Workflow operations used by BranchSession (outside the engine)
-    def checkout(self, branch: str) -> None: ...
-    def pull(self, branch: str) -> None: ...           # --ff-only
-    def checkout_new_branch(self, branch: str) -> None: ...  # git checkout -B
-    def commit(self, message: str) -> None: ...
-    def push(self, branch: str) -> None: ...           # --force-with-lease
-    def delete_branch(self, branch: str) -> None: ...
 ```
+GitBackend:
+  -- VCSBackend protocol
+  stage_all()                      -> void
+  diff_staged()                    -> string
 
-`GitBackend` has no constructor — it relies on the process's working directory
-rather than an explicit `project_dir` argument.
+  -- Workflow operations (used by BranchSession, not the engine)
+  checkout(branch: string)         -> void
+  pull(branch: string)             -> void
+  checkout_new_branch(branch: string) -> void  -- resets branch if it already exists
+  commit(message: string)          -> void
+  push(branch: string)             -> void     -- force-with-lease
+  delete_branch(branch: string)    -> void
+```
 
 #### Why `BranchSession` takes `GitBackend`, not `VCSBackend`
 
-`BranchSession` needs the workflow methods (`checkout`, `pull`, `commit`, `push`,
-etc.) that are intentionally outside the `VCSBackend` protocol. Widening the
-protocol to include them would blur the engine/pipeline boundary — `VCSBackend`
-is scoped to what the engine needs, not what the full workflow needs.
+`BranchSession` needs the workflow methods that are intentionally outside the
+`VCSBackend` protocol. Widening the protocol to include them would blur the
+engine/pipeline boundary — `VCSBackend` is scoped to what the engine needs,
+not what the full workflow needs.
 
 Until a second VCS adapter exists, taking the concrete `GitBackend` is the right
 call. If a `GitLabBackend` or similar is added, the natural step is either a
-second `WorkflowVCSBackend` protocol or a shared base class — not widening the
+second `WorkflowVCSBackend` protocol or a shared interface — not widening the
 existing engine protocol.
 
 ### Future adapters
