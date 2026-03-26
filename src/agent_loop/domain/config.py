@@ -1,20 +1,18 @@
-from typing import TypedDict
+from dataclasses import dataclass
 
 
-class _ConfigRequired(TypedDict):
-    max_iterations: int
-    context: str
+@dataclass(frozen=True)
+class Config:
+    """Settings loaded from .agent-loop.yml.
 
+    All fields have defaults. Optional prompt overrides are None when absent —
+    pipelines fall back to their own built-in defaults in that case.
+    """
 
-class Config(_ConfigRequired, total=False):
-    # Prompt overrides — optional because commands fall back to their own defaults
-    # when these keys are absent. Users can set them in .agent-loop.yml.
-    analyze_prompt: str
-    fix_prompt_template: str
-    review_prompt: str
+    max_iterations: int = 5
+    context: str = ""
 
-
-DEFAULT_CONFIG: Config = {
-    "max_iterations": 5,
-    "context": "",
-}
+    # Prompt overrides — None means "use the built-in default".
+    analyze_prompt: str | None = None
+    fix_prompt_template: str | None = None
+    review_prompt: str | None = None

@@ -30,9 +30,9 @@ def cmd_analyze(ctx: AppContext) -> None:
     """Analyze the codebase and create GitHub issues."""
     log("🔍 Analyzing codebase...")
 
-    prompt = ctx.config.get("analyze_prompt", ANALYZE_PROMPT)
-    if ctx.config.get("context"):
-        prompt = f"Project context:\n{ctx.config['context']}\n\n{prompt}"
+    prompt = ctx.config.analyze_prompt or ANALYZE_PROMPT
+    if ctx.config.context:
+        prompt = f"Project context:\n{ctx.config.context}\n\n{prompt}"
 
     t0 = time.monotonic()
     raw = ctx.read_agent.run(prompt)

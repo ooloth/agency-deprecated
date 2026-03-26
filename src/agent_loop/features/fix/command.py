@@ -32,7 +32,7 @@ def _log_engine_progress(event: str) -> None:
 
 def cmd_fix(ctx: AppContext, issue_number: int | None = None) -> None:
     """Pick up ready-to-fix issues and run the fix+review loop."""
-    max_iterations = ctx.config["max_iterations"]
+    max_iterations = ctx.config.max_iterations
 
     # Get issues to fix
     if issue_number:
@@ -75,9 +75,9 @@ def fix_single_issue(ctx: AppContext, issue: Issue, max_iterations: int) -> None
             review_agent=ctx.read_agent,
             vcs=ctx.vcs,
             max_iterations=max_iterations,
-            context=ctx.config.get("context", ""),
-            fix_prompt_template=ctx.config.get("fix_prompt_template", FIX_PROMPT_TEMPLATE),
-            review_prompt=ctx.config.get("review_prompt", REVIEW_PROMPT),
+            context=ctx.config.context,
+            fix_prompt_template=ctx.config.fix_prompt_template or FIX_PROMPT_TEMPLATE,
+            review_prompt=ctx.config.review_prompt or REVIEW_PROMPT,
             on_progress=_log_engine_progress,
         )
         result = implement_and_review(task)
