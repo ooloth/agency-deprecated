@@ -1,8 +1,10 @@
 import argparse
+import sys
 import textwrap
 from pathlib import Path
 
 from agent_loop.domain.context import AppContext
+from agent_loop.domain.errors import AgentLoopError
 from agent_loop.io.config import load_config
 from agent_loop.io.adapters.claude_cli import EDIT_TOOLS, READ_ONLY_TOOLS, ClaudeCliBackend
 from agent_loop.io.adapters.git import GitBackend
@@ -64,9 +66,13 @@ def main() -> None:
         edit_agent=ClaudeCliBackend(project_dir, allowed_tools=EDIT_TOOLS),
     )
 
-    if args.command == "analyze":
-        cmd_analyze(ctx)
-    elif args.command == "fix":
-        cmd_fix(ctx, issue_number=args.issue)
-    elif args.command == "watch":
-        cmd_watch(ctx, interval=args.interval, max_open_issues=args.max_open_issues)
+    try:
+        if args.command == "analyze":
+            cmd_analyze(ctx)
+        elif args.command == "fix":
+            cmd_fix(ctx, issue_number=args.issue)
+        elif args.command == "watch":
+            cmd_watch(ctx, interval=args.interval, max_open_issues=args.max_open_issues)
+    except AgentLoopError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)

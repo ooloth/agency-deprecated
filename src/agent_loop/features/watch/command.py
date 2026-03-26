@@ -2,13 +2,19 @@ import signal
 import time
 
 from agent_loop.domain.context import AppContext
+from agent_loop.domain.errors import AgentLoopError
 from agent_loop.io.logging import log
 from agent_loop.features.analyze.command import cmd_analyze
 from agent_loop.features.fix.command import cmd_fix
 
 
 def cmd_watch(ctx: AppContext, interval: int, max_open_issues: int) -> None:
-    """Poll for work: fix ready issues, analyze when queue is low."""
+    """Poll for work: fix ready issues, analyze when queue is low.
+
+    Catches AgentLoopError per iteration so a transient failure (bad network,
+    flaky subprocess) doesn't kill the daemon. The error is logged and the
+    loop continues on the next cycle.
+    """
     stopping = False
 
     def handle_signal(sig: int, frame: object) -> None:
@@ -24,28 +30,11 @@ def cmd_watch(ctx: AppContext, interval: int, max_open_issues: int) -> None:
     print()
 
     while not stopping:
-        # Step 1: Fix any ready-to-fix issues
-        ready_issues = ctx.tracker.list_ready_issues()
-
-        if ready_issues:
-            cmd_fix(ctx)
-            if stopping:
-                break
-        else:
-            log("💤 No issues ready to fix")
-
-        # Step 2: Analyze if queue is below cap
-        open_count = len(ctx.tracker.list_awaiting_review())
-
-        if open_count >= max_open_issues:
-            log(
-                f"⏸️  {open_count} issue(s) awaiting review (cap: {max_open_issues}) — skipping analysis"
-            )
-        else:
-            log(
-                f"🔍 {open_count} issue(s) awaiting review (cap: {max_open_issues}) — running analysis"
-            )
-            cmd_analyze(ctx)
+        try:
+            _poll_once(ctx, max_open_issues)
+        except AgentLoopError as exc:
+            log(f"❌ Error during poll: {exc}")
+            log("   Will retry next cycle.")
 
         if stopping:
             break
@@ -59,3 +48,25 @@ def cmd_watch(ctx: AppContext, interval: int, max_open_issues: int) -> None:
             time.sleep(1)
 
     log("👋 Stopped.")
+
+
+def _poll_once(ctx: AppContext, max_open_issues: int) -> None:
+    """Run one fix + analyze cycle. Exceptions propagate to the caller."""
+    # Step 1: Fix any ready-to-fix issues
+    ready_issues = ctx.tracker.list_ready_issues()
+
+    if ready_issues:
+        cmd_fix(ctx)
+    else:
+        log("💤 No issues ready to fix")
+
+    # Step 2: Analyze if queue is below cap
+    open_count = len(ctx.tracker.list_awaiting_review())
+
+    if open_count >= max_open_issues:
+        log(
+            f"⏸️  {open_count} issue(s) awaiting review (cap: {max_open_issues}) — skipping analysis"
+        )
+    else:
+        log(f"🔍 {open_count} issue(s) awaiting review (cap: {max_open_issues}) — running analysis")
+        cmd_analyze(ctx)

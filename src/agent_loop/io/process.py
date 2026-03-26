@@ -1,13 +1,15 @@
 import subprocess
-import sys
+
+from agent_loop.domain.errors import SubprocessError
 
 
 def run(cmd: list[str], check: bool = True, capture: bool = True) -> str:
-    """Run a subprocess command and return stdout."""
+    """Run a subprocess command and return stdout.
+
+    Raises SubprocessError on non-zero exit (when check=True) instead of
+    calling sys.exit, so callers higher up can decide how to handle it.
+    """
     result = subprocess.run(cmd, capture_output=capture, text=True)
     if check and result.returncode != 0:
-        print(f"Command failed: {' '.join(cmd)}", file=sys.stderr)
-        if result.stderr:
-            print(result.stderr, file=sys.stderr)
-        sys.exit(1)
+        raise SubprocessError(cmd=" ".join(cmd), stderr=result.stderr or "")
     return result.stdout.strip() if capture else ""

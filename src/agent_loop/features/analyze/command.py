@@ -1,9 +1,9 @@
 import json
 import re
-import sys
 import time
 
 from agent_loop.domain.context import AppContext
+from agent_loop.domain.errors import AnalysisParseError
 from agent_loop.domain.issues import FoundIssue
 from agent_loop.io.logging import log
 from agent_loop.features.analyze.prompts import ANALYZE_PROMPT
@@ -14,6 +14,8 @@ def parse_analysis_results(raw: str) -> list[dict]:
 
     Agents sometimes wrap JSON in a fenced code block; this handles both
     the bare-JSON and fenced-block cases.
+
+    Raises AnalysisParseError if the response isn't valid JSON.
     """
     match = re.search(r"```(?:\w+)?\n(.*?)```", raw, re.DOTALL)
     json_str = match.group(1) if match else raw
@@ -21,9 +23,7 @@ def parse_analysis_results(raw: str) -> list[dict]:
     try:
         return json.loads(json_str)
     except json.JSONDecodeError:
-        print("Failed to parse agent response as JSON:", file=sys.stderr)
-        print(raw, file=sys.stderr)
-        sys.exit(1)
+        raise AnalysisParseError(raw) from None
 
 
 def cmd_analyze(ctx: AppContext) -> None:

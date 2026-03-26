@@ -1,6 +1,7 @@
 import subprocess
-import sys
 from pathlib import Path
+
+from agent_loop.domain.errors import AgentError
 
 # Read-only tools for analysis and review (no filesystem writes or shell execution)
 READ_ONLY_TOOLS = "Read,Glob,Grep"
@@ -23,6 +24,5 @@ class ClaudeCliBackend:
             cwd=self._project_dir,
         )
         if result.returncode != 0:
-            print(f"Claude failed: {result.stderr}", file=sys.stderr)
-            sys.exit(1)
+            raise AgentError(stderr=result.stderr or "")
         return result.stdout.strip()
