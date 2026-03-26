@@ -49,11 +49,11 @@ def cmd_analyze(ctx: AppContext) -> None:
         extra_labels = issue.get("labels", [])
 
         # Ensure extra labels exist
-        for l in extra_labels:
-            gh("label", "create", l, "--force", "--description", "")
+        for label in extra_labels:
+            gh("label", "create", label, "--force", "--description", "")
 
         all_labels = [Label.AGENT_REPORTED, Label.NEEDS_HUMAN_REVIEW] + extra_labels
-        label_args = [arg for l in all_labels for arg in ("--label", str(l))]
+        label_args = [arg for label in all_labels for arg in ("--label", str(label))]
         gh("issue", "create", "--title", title, "--body", body, *label_args)
         is_last = issue is issues[-1]
         connector = "└──" if is_last else "├──"

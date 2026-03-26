@@ -89,7 +89,9 @@ def fix_single_issue(ctx: AppContext, issue: dict, max_iterations: int) -> None:
             project_dir=ctx.project_dir,
             max_iterations=max_iterations,
             context=ctx.config.get("context", ""),
-            fix_prompt_template=ctx.config.get("fix_prompt_template", FIX_PROMPT_TEMPLATE),
+            fix_prompt_template=ctx.config.get(
+                "fix_prompt_template", FIX_PROMPT_TEMPLATE
+            ),
             review_prompt=ctx.config.get("review_prompt", REVIEW_PROMPT),
         )
         result = implement_and_review(task)
@@ -125,7 +127,9 @@ def fix_single_issue(ctx: AppContext, issue: dict, max_iterations: int) -> None:
         )
 
         # Post review trail as a PR comment
-        review_comment = format_review_comment(result.review_log, result.converged, max_iterations)
+        review_comment = format_review_comment(
+            result.review_log, result.converged, max_iterations
+        )
         gh("pr", "comment", branch, "--body", review_comment)
 
         pr_opened = True
