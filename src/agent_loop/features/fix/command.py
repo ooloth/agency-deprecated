@@ -70,7 +70,10 @@ def fix_single_issue(ctx: AppContext, issue: Issue, max_iterations: int) -> None
             log_step(f"⚠️  No changes for #{number}. May already be fixed.", last=True)
             ctx.tracker.comment_on_issue(
                 number,
-                "Agent attempted a fix but no changes were needed. This issue may already be resolved.\n\n"
+                "## ⚠️ Agent made no changes\n\n"
+                "The agent ran but produced no diff. Here's what it said:\n\n"
+                f"{result.implement_response}\n\n"
+                "---\n\n"
                 "Removing `ready-to-fix` — re-add it to retry, or close the issue if it's resolved.",
             )
             ctx.tracker.remove_ready_label(number)
