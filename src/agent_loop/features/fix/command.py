@@ -2,8 +2,6 @@ import time
 
 from agent_loop.domain.context import AppContext
 from agent_loop.domain.issues import Issue
-from agent_loop.io.adapters.claude_cli import EDIT_TOOLS, READ_ONLY_TOOLS, ClaudeCliBackend
-from agent_loop.io.adapters.git import GitBackend
 from agent_loop.io.logging import log, log_step
 from agent_loop.features.fix.branch_session import BranchSession
 from agent_loop.features.fix.engine import ImplementAndReviewInput, implement_and_review
@@ -45,20 +43,16 @@ def fix_single_issue(ctx: AppContext, issue: Issue, max_iterations: int) -> None
     title = issue.title
     body = issue.body
 
-    git = GitBackend()
     fix_start = time.monotonic()
     log(f"🔧 #{number} {title}")
 
-    with BranchSession(issue, ctx.tracker, git) as session:
-        implement_agent = ClaudeCliBackend(ctx.project_dir, allowed_tools=EDIT_TOOLS)
-        review_agent = ClaudeCliBackend(ctx.project_dir, allowed_tools=READ_ONLY_TOOLS)
-
+    with BranchSession(issue, ctx.tracker, ctx.vcs) as session:
         task = ImplementAndReviewInput(
             title=title,
             body=body,
-            implement_agent=implement_agent,
-            review_agent=review_agent,
-            vcs=git,
+            implement_agent=ctx.edit_agent,
+            review_agent=ctx.read_agent,
+            vcs=ctx.vcs,
             max_iterations=max_iterations,
             context=ctx.config.get("context", ""),
             fix_prompt_template=ctx.config.get("fix_prompt_template", FIX_PROMPT_TEMPLATE),

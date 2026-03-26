@@ -35,7 +35,7 @@ def cmd_analyze(ctx: AppContext) -> None:
         prompt = f"Project context:\n{ctx.config['context']}\n\n{prompt}"
 
     t0 = time.monotonic()
-    raw = ctx.agent.run(prompt)
+    raw = ctx.read_agent.run(prompt)
 
     issues = parse_analysis_results(raw)
 

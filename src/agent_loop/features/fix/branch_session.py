@@ -4,11 +4,16 @@ Handles branch creation, label locking, and cleanup so that fix_single_issue
 can focus on the issue-resolution logic rather than branch bookkeeping.
 """
 
+from __future__ import annotations
+
 from types import TracebackType
+from typing import TYPE_CHECKING
 
 from agent_loop.domain.issues import Issue
 from agent_loop.domain.protocols import IssueTracker
-from agent_loop.io.adapters.git import GitBackend
+
+if TYPE_CHECKING:
+    from agent_loop.io.adapters.git import GitBackend
 
 
 class BranchSession:

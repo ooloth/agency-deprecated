@@ -135,8 +135,10 @@ triage — not a general open-issue count.
 AppContext:                     -- composition root; passed to every pipeline command
   project_dir:  path
   config:       Config
-  agent:        AgentBackend
   tracker:      IssueTracker
+  vcs:          GitBackend     -- concrete (BranchSession needs workflow methods)
+  read_agent:   AgentBackend   -- read-only; used by analyze + fix review
+  edit_agent:   AgentBackend   -- edit access; used by fix implement
 
 Config:                         -- loaded from .agent-loop.yml
   max_iterations:       integer

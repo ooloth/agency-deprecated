@@ -5,9 +5,10 @@ Vertical slices that compose domain and io building blocks (the _when_ and _why_
 The feature pipelines: `analyze`, `fix`, and `watch`.
 
 Each pipeline orchestrates domain ports and the implement/review engine to carry
-out one user-facing workflow. Pipelines depend on `domain/` but not on `io/` —
-they receive concrete backends via `AppContext` at the call site. See
-`specs/architecture.md` for the architectural rationale.
+out one user-facing workflow. Pipelines depend on `domain/` and use `io/logging`
+for output, but never import adapters — they receive concrete backends via
+`AppContext` at the call site. See `specs/architecture.md` for the architectural
+rationale.
 
 ## Contents
 
