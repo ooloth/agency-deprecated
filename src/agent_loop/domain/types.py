@@ -1,6 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
-from pathlib import Path
 from typing import TypedDict
 
 
@@ -46,25 +45,20 @@ class Config(_ConfigRequired, total=False):
     review_prompt: str
 
 
-class ReviewEntry(TypedDict):
-    iteration: int
-    approved: bool
-    feedback: str
-
-
 @dataclass(frozen=True)
-class ImplementAndReviewInput:
+class Issue:
+    """A work item in the issue tracker."""
+
+    number: int
     title: str
     body: str
-    project_dir: Path
-    max_iterations: int
-    context: str
-    fix_prompt_template: str
-    review_prompt: str
+    labels: frozenset[str]
 
 
 @dataclass(frozen=True)
-class ImplementAndReviewResult:
-    review_log: list[ReviewEntry]
-    converged: bool
-    has_changes: bool
+class FoundIssue:
+    """An issue discovered by the analyzer, before it is filed in a tracker."""
+
+    title: str
+    body: str
+    labels: list[str] = field(default_factory=list)

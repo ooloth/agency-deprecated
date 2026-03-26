@@ -2,7 +2,7 @@ from pathlib import Path
 
 import yaml
 
-from agent_loop._core.types import Config
+from agent_loop.domain.types import Config
 
 # Structural defaults only — prompt text lives with its feature module and is
 # used as the fallback when not overridden via .agent-loop.yml. This avoids a

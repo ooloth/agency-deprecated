@@ -3,9 +3,11 @@ import signal
 import time
 from pathlib import Path
 
-from agent_loop._core import Label, gh, log
-from agent_loop.analyze.command import cmd_analyze
-from agent_loop.fix.command import cmd_fix
+from agent_loop.domain.types import Label
+from agent_loop.io.logging import log
+from agent_loop.io.shell import gh
+from agent_loop.features.analyze.command import cmd_analyze
+from agent_loop.features.fix.command import cmd_fix
 
 
 def cmd_watch(

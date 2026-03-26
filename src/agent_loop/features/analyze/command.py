@@ -2,15 +2,11 @@ import json
 import time
 from pathlib import Path
 
-from agent_loop._core import (
-    Label,
-    claude,
-    ensure_label,
-    gh,
-    log,
-)
-from agent_loop.analyze.parse import extract_json_from_response
-from agent_loop.analyze.prompts import ANALYZE_PROMPT
+from agent_loop.domain.types import Label
+from agent_loop.io.logging import log
+from agent_loop.io.shell import claude, ensure_label, gh
+from agent_loop.features.analyze.parse import extract_json_from_response
+from agent_loop.features.analyze.prompts import ANALYZE_PROMPT
 
 
 def cmd_analyze(project_dir: Path, config: dict) -> None:

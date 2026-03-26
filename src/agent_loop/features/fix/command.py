@@ -2,18 +2,12 @@ import json
 import time
 from pathlib import Path
 
-from agent_loop._core import (
-    ImplementAndReviewInput,
-    Label,
-    ensure_label,
-    gh,
-    git,
-    implement_and_review,
-    log,
-    log_step,
-)
-from agent_loop.fix.prompts import FIX_PROMPT_TEMPLATE, REVIEW_PROMPT
-from agent_loop.fix.review import format_review_comment
+from agent_loop.domain.types import Label
+from agent_loop.io.logging import log, log_step
+from agent_loop.io.shell import ensure_label, gh, git
+from agent_loop.features.fix.engine import ImplementAndReviewInput, implement_and_review
+from agent_loop.features.fix.prompts import FIX_PROMPT_TEMPLATE, REVIEW_PROMPT
+from agent_loop.features.fix.review import format_review_comment
 
 
 def cmd_fix(project_dir: Path, config: dict, issue_number: int | None = None) -> None:

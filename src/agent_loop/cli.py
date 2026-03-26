@@ -2,10 +2,10 @@ import argparse
 import textwrap
 from pathlib import Path
 
-from agent_loop._core import load_config
-from agent_loop.analyze.command import cmd_analyze
-from agent_loop.fix.command import cmd_fix
-from agent_loop.watch.command import cmd_watch
+from agent_loop.io.config import load_config
+from agent_loop.features.analyze.command import cmd_analyze
+from agent_loop.features.fix.command import cmd_fix
+from agent_loop.features.watch.command import cmd_watch
 
 
 def main() -> None:

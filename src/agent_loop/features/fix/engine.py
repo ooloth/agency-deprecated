@@ -1,9 +1,35 @@
 import re
 import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import TypedDict
 
-from agent_loop._core.logging import log_detail, log_step
-from agent_loop._core.shell import claude, git
-from agent_loop._core.types import ImplementAndReviewInput, ImplementAndReviewResult, ReviewEntry
+from agent_loop.io.logging import log_detail, log_step
+from agent_loop.io.shell import claude, git
+
+
+class ReviewEntry(TypedDict):
+    iteration: int
+    approved: bool
+    feedback: str
+
+
+@dataclass(frozen=True)
+class ImplementAndReviewInput:
+    title: str
+    body: str
+    project_dir: Path
+    max_iterations: int
+    context: str
+    fix_prompt_template: str
+    review_prompt: str
+
+
+@dataclass(frozen=True)
+class ImplementAndReviewResult:
+    review_log: list[ReviewEntry]
+    converged: bool
+    has_changes: bool
 
 
 def parse_review_verdict(feedback: str) -> bool:
