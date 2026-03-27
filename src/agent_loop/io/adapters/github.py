@@ -4,7 +4,6 @@ from enum import StrEnum
 from agent_loop.domain.models.issues import FoundIssue, Issue
 from agent_loop.io.transports.process import run
 
-
 # --- GitHub workflow labels (private implementation detail) ---
 # These are GitHub-specific mechanisms for expressing workflow state via issue
 # labels. In a different tracker (Linear, Jira), the same concepts would be

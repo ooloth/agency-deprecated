@@ -33,7 +33,7 @@ class BranchSession:
         self._default_branch: str = ""
         self._pushed = False
 
-    def __enter__(self) -> "BranchSession":
+    def __enter__(self) -> BranchSession:
         self._default_branch = self._tracker.get_default_branch()
 
         # Pull before claiming so a network failure doesn't leave the lock stuck.

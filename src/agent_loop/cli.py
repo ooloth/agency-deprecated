@@ -5,13 +5,13 @@ from pathlib import Path
 
 from agent_loop.domain.context import AppContext
 from agent_loop.domain.errors import AgentLoopError
-from agent_loop.io.bootstrap.config import load_config
-from agent_loop.io.adapters.claude_cli import EDIT_TOOLS, READ_ONLY_TOOLS, ClaudeCliBackend
-from agent_loop.io.adapters.git import GitBackend
-from agent_loop.io.adapters.github import GitHubTracker
 from agent_loop.features.analyze.command import cmd_analyze
 from agent_loop.features.fix.command import cmd_fix
 from agent_loop.features.watch.command import cmd_watch
+from agent_loop.io.adapters.claude_cli import EDIT_TOOLS, READ_ONLY_TOOLS, ClaudeCliBackend
+from agent_loop.io.adapters.git import GitBackend
+from agent_loop.io.adapters.github import GitHubTracker
+from agent_loop.io.bootstrap.config import load_config
 
 
 def main() -> None:
