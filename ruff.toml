@@ -12,5 +12,8 @@ fixable = ["ALL"] # allow fix for all enabled rules (when `--fix`) is provided.
 unfixable = []
 extend-select = ["B", "C4", "DTZ", "FBT", "I", "PERF", "PIE", "PT", "RET", "SIM", "TID251", "UP"]
 
+[lint.isort]
+known-first-party = ["agent_loop"]
+
 [lint.flake8-tidy-imports.banned-api]
 "typing.TYPE_CHECKING".msg = "Unnecessary on Python 3.14+. Use regular imports instead."
