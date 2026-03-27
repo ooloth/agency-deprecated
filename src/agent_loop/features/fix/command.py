@@ -1,7 +1,7 @@
 import time
 
 from agent_loop.domain.context import AppContext
-from agent_loop.domain.issues import Issue
+from agent_loop.domain.models.issues import Issue
 from agent_loop.io.observability.logging import log, log_detail, log_step
 from agent_loop.features.fix.branch_session import BranchSession
 from agent_loop.features.fix.engine import ImplementAndReviewInput, implement_and_review

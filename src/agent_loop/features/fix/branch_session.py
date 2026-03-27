@@ -6,8 +6,9 @@ can focus on the issue-resolution logic rather than branch bookkeeping.
 
 from types import TracebackType
 
-from agent_loop.domain.issues import Issue
-from agent_loop.domain.protocols import IssueTracker, VCSBackend
+from agent_loop.domain.models.issues import Issue
+from agent_loop.domain.ports.issue_tracker import IssueTracker
+from agent_loop.domain.ports.vcs_backend import VCSBackend
 
 
 class BranchSession:

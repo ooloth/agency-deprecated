@@ -1,7 +1,7 @@
 import json
 from enum import StrEnum
 
-from agent_loop.domain.issues import FoundIssue, Issue
+from agent_loop.domain.models.issues import FoundIssue, Issue
 from agent_loop.io.transports.process import run
 
 

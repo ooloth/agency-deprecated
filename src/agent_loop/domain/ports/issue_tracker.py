@@ -1,50 +1,8 @@
-"""Ports — interfaces the domain depends on, implemented by infra adapters."""
+"""IssueTracker port — the issue-platform interface."""
 
 from typing import Protocol
 
-from agent_loop.domain.issues import FoundIssue, Issue
-
-
-class AgentBackend(Protocol):
-    """Run a prompt and return the response. Abstracts the AI provider."""
-
-    def run(self, prompt: str) -> str: ...
-
-
-class VCSBackend(Protocol):
-    """VCS operations used by the engine and fix pipeline."""
-
-    def stage_all(self) -> None:
-        """Stage all current changes (git add -A equivalent)."""
-        ...
-
-    def diff_staged(self) -> str:
-        """Return the staged diff. Empty string means no staged changes."""
-        ...
-
-    def checkout(self, branch: str) -> None:
-        """Switch to an existing branch."""
-        ...
-
-    def pull(self, branch: str) -> None:
-        """Pull the latest changes for a branch from the remote."""
-        ...
-
-    def checkout_new_branch(self, branch: str) -> None:
-        """Create and switch to a new branch, resetting it if it already exists."""
-        ...
-
-    def commit(self, message: str) -> None:
-        """Commit all staged changes."""
-        ...
-
-    def push(self, branch: str) -> None:
-        """Push a branch to the remote."""
-        ...
-
-    def delete_branch(self, branch: str) -> None:
-        """Delete a local branch."""
-        ...
+from agent_loop.domain.models.issues import FoundIssue, Issue
 
 
 class IssueTracker(Protocol):

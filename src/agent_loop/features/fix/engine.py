@@ -4,7 +4,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import TypedDict
 
-from agent_loop.domain.protocols import AgentBackend, VCSBackend
+from agent_loop.domain.ports.agent_backend import AgentBackend
+from agent_loop.domain.ports.vcs_backend import VCSBackend
 
 
 class ReviewEntry(TypedDict):

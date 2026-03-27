@@ -2,7 +2,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from agent_loop.domain.config import Config
-from agent_loop.domain.protocols import AgentBackend, IssueTracker, VCSBackend
+from agent_loop.domain.ports.agent_backend import AgentBackend
+from agent_loop.domain.ports.issue_tracker import IssueTracker
+from agent_loop.domain.ports.vcs_backend import VCSBackend
 
 
 @dataclass(frozen=True)
