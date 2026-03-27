@@ -47,7 +47,7 @@ methods, which is enforced by its own input type, not by a narrower protocol.
 
 ### `GitBackend` (current)
 
-Wraps the `git` CLI via `io/process.run()`.
+Wraps the `git` CLI via a shared subprocess transport in the io layer.
 
 ### Future adapters
 

@@ -166,7 +166,9 @@ FoundIssue:                     -- output of the analyze step, before filing
   different tracker uses different identifiers, `BranchSession` receives the
   branch name as a parameter from the pipeline.
 - **Config loading** — stays concrete (YAML → `Config`). The config format is
-  an intentional user-facing contract, not a backend concern.
-- **Logging** — stays concrete. It's a cross-cutting concern, not a port.
+  an intentional user-facing contract, not a backend concern. Lives in io as
+  bootstrap (startup assembly), not as a port-adapter pair.
+- **Logging** — stays concrete. It's a cross-cutting concern, not a port. Lives
+  in io as observability — the one io subpackage features may import directly.
 - **Default prompts** — built-in defaults live alongside each pipeline. Users
   can override any of them via the config file.
