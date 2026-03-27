@@ -12,6 +12,8 @@ hooks = [
 ]
 
 [[repos]]
+# Use local .venv version to ensure the same version of tools for all developers and CI
+# Language is "system" instead of "python" to prevent prek from creating a second venv, which would be redundant and could cause issues with native dependencies
 repo = "local"
 hooks = [
   { id = "ruff-check", name = "ruff-check", entry = "uv run ruff check --fix", language = "system", types = ["python"] },
