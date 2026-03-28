@@ -1,12 +1,9 @@
 from datetime import datetime
-from zoneinfo import ZoneInfo
-
-TZ_TORONTO = ZoneInfo("America/Toronto")
 
 
 def log(msg: str, prefix: str = "") -> None:
     """Log a timestamped message."""
-    timestamp = datetime.now(tz=TZ_TORONTO).strftime("%H:%M:%S")
+    timestamp = datetime.now().astimezone().strftime("%H:%M:%S")
     print(f"[{timestamp}] {prefix}{msg}")
 
 
