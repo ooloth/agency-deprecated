@@ -73,7 +73,7 @@ class GitHubTracker:
         _ensure_label(_Label.NEEDS_HUMAN_REVIEW)
         for label in found.labels:
             _gh("label", "create", label, "--force", "--description", "")
-        all_labels = [_Label.AGENT_REPORTED, _Label.NEEDS_HUMAN_REVIEW] + found.labels
+        all_labels = [_Label.AGENT_REPORTED, _Label.NEEDS_HUMAN_REVIEW, *found.labels]
         label_args = [arg for lbl in all_labels for arg in ("--label", str(lbl))]
         _gh("issue", "create", "--title", found.title, "--body", found.body, *label_args)
 

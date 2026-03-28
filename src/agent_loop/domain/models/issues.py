@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -17,4 +17,4 @@ class FoundIssue:
 
     title: str
     body: str
-    labels: list[str] = field(default_factory=list)
+    labels: tuple[str, ...] = ()

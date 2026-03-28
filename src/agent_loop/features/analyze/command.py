@@ -33,7 +33,7 @@ def cmd_analyze(ctx: AppContext) -> None:
         found = FoundIssue(
             title=issue["title"],
             body=issue.get("body", ""),
-            labels=issue.get("labels", []),
+            labels=tuple(issue.get("labels", [])),
         )
         if found.title in existing_titles:
             log(f"├── ⏭️  Skipped (already exists): {found.title}")
