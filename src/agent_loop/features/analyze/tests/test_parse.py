@@ -2,8 +2,8 @@
 
 import pytest
 
-from agent_loop.domain.errors import AnalysisParseError
 from agent_loop.features.analyze.command import parse_analysis_results
+from agent_loop.features.analyze.errors import AnalysisParseError
 
 # --- parse_analysis_results ---
 
