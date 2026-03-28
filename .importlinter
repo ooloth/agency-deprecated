@@ -57,6 +57,21 @@ layers =
     agent_loop.io.adapters
     agent_loop.io.transports
 
+# --- io/errors independence ---
+# io/errors.py may be imported by any io subpackage but depends on
+# none of them (only domain).
+
+[importlinter:contract:io-errors-independence]
+name = io/errors does not depend on io/ subpackages
+type = forbidden
+source_modules =
+    agent_loop.io.errors
+forbidden_modules =
+    agent_loop.io.adapters
+    agent_loop.io.bootstrap
+    agent_loop.io.transports
+    agent_loop.io.observability
+
 # --- Observability independence ---
 # Observability may be imported by any io subpackage but depends on
 # none of them.
@@ -70,6 +85,7 @@ forbidden_modules =
     agent_loop.io.adapters
     agent_loop.io.bootstrap
     agent_loop.io.transports
+    agent_loop.io.errors
 
 # --- domain/ internal rules ---
 # models and errors are leaves; ports depend on models only;

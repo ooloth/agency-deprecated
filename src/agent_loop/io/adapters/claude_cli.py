@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from agent_loop.domain.errors import AgentError, SubprocessError
+from agent_loop.domain.errors import AgentError
+from agent_loop.io.errors import SubprocessError
 from agent_loop.io.transports.process import run
 
 # Read-only tools for analysis and review (no filesystem writes or shell execution)

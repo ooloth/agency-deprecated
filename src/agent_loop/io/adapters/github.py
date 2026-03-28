@@ -1,8 +1,8 @@
 import json
 from enum import StrEnum
 
-from agent_loop.domain.errors import SubprocessError
 from agent_loop.domain.models.issues import FoundIssue, Issue
+from agent_loop.io.errors import SubprocessError
 from agent_loop.io.transports.process import run
 
 # --- GitHub workflow labels (private implementation detail) ---

@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
 
-from agent_loop.domain.errors import SubprocessError
+from agent_loop.io.errors import SubprocessError
 
 
 def run(
