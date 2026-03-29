@@ -31,21 +31,6 @@ forbidden_modules =
 ignore_imports =
     agent_loop.features.** -> agent_loop.io.observability.**
 
-# --- Engine purity ---
-# The engine is the domain core. It must only depend on domain ports
-# and models — no io, no other features, no adapters.
-
-[importlinter:contract:engine-purity]
-name = Engine depends only on domain
-type = forbidden
-source_modules =
-    agent_loop.features.fix.engine
-forbidden_modules =
-    agent_loop.io
-    agent_loop.cli
-    agent_loop.features.analyze
-    agent_loop.features.watch
-
 # --- io/ internal layering ---
 # bootstrap -> adapters -> transports (lower must not import higher).
 
@@ -89,7 +74,7 @@ forbidden_modules =
 
 # --- domain/ internal rules ---
 # models and errors are leaves; ports depend on models only;
-# nothing in domain imports context.
+# loop depends on models and ports; nothing in domain imports context.
 
 [importlinter:contract:models-are-leaves]
 name = Models are domain leaves
@@ -101,6 +86,7 @@ forbidden_modules =
     agent_loop.domain.config
     agent_loop.domain.context
     agent_loop.domain.errors
+    agent_loop.domain.loop
 
 [importlinter:contract:errors-are-leaves]
 name = Errors are domain leaves
@@ -112,12 +98,24 @@ forbidden_modules =
     agent_loop.domain.models
     agent_loop.domain.config
     agent_loop.domain.context
+    agent_loop.domain.loop
 
 [importlinter:contract:ports-depend-on-models-only]
 name = Ports depend only on models
 type = forbidden
 source_modules =
     agent_loop.domain.ports
+forbidden_modules =
+    agent_loop.domain.config
+    agent_loop.domain.context
+    agent_loop.domain.errors
+    agent_loop.domain.loop
+
+[importlinter:contract:loop-depends-on-models-and-ports]
+name = Loop depends only on domain models and ports
+type = forbidden
+source_modules =
+    agent_loop.domain.loop
 forbidden_modules =
     agent_loop.domain.config
     agent_loop.domain.context
@@ -131,5 +129,6 @@ source_modules =
     agent_loop.domain.ports
     agent_loop.domain.config
     agent_loop.domain.errors
+    agent_loop.domain.loop
 forbidden_modules =
     agent_loop.domain.context

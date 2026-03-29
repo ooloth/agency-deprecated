@@ -1,18 +1,19 @@
 import time
 
 from agent_loop.domain.context import AppContext
-from agent_loop.domain.models.issues import Issue
-from agent_loop.features.fix.branch_session import BranchSession
-from agent_loop.features.fix.engine import (
+from agent_loop.domain.loop.engine import (
     AddressingFeedback,
     EngineEvent,
-    ImplementAndReviewInput,
     Implementing,
     NoChanges,
     ReviewApproved,
     ReviewRejected,
-    implement_and_review,
+    loop_until_done,
 )
+from agent_loop.domain.loop.strategies import AntagonisticStrategy
+from agent_loop.domain.loop.work import from_issue
+from agent_loop.domain.models.issues import Issue
+from agent_loop.features.fix.branch_session import BranchSession
 from agent_loop.features.fix.prompts import FIX_PROMPT_TEMPLATE, REVIEW_PROMPT
 from agent_loop.features.fix.review import format_review_comment
 from agent_loop.io.observability.logging import log, log_detail, log_step
@@ -65,53 +66,51 @@ def cmd_fix(ctx: AppContext, issue_number: int | None = None) -> None:
 
 def fix_single_issue(ctx: AppContext, issue: Issue, max_iterations: int) -> None:
     """Fix a single issue with the review loop."""
-    number = issue.number
-    title = issue.title
-    body = issue.body
-
+    work = from_issue(issue)
     fix_start = time.monotonic()
-    log(f"🔧 #{number} {title}")
+    log(f"🔧 #{issue.number} {issue.title}")
 
     with BranchSession(issue, ctx.tracker, ctx.vcs) as session:
-        task = ImplementAndReviewInput(
-            title=title,
-            body=body,
+        strategy = AntagonisticStrategy(
             implement_agent=ctx.edit_agent,
             review_agent=ctx.read_agent,
+            fix_prompt_template=ctx.config.fix_prompt_template or FIX_PROMPT_TEMPLATE,
+            review_prompt=ctx.config.review_prompt or REVIEW_PROMPT,
+        )
+        result = loop_until_done(
+            work=work,
+            strategy=strategy,
             vcs=ctx.vcs,
             max_iterations=max_iterations,
             context=ctx.config.context,
-            fix_prompt_template=ctx.config.fix_prompt_template or FIX_PROMPT_TEMPLATE,
-            review_prompt=ctx.config.review_prompt or REVIEW_PROMPT,
             on_progress=_log_engine_progress,
         )
-        result = implement_and_review(task)
 
         if not result.has_changes:
-            log_step(f"⚠️  No changes for #{number}. May already be fixed.", last=True)
+            log_step(f"⚠️  No changes for #{issue.number}. May already be fixed.", last=True)
             ctx.tracker.comment_on_issue(
-                number,
+                issue.number,
                 "## ⚠️ Agent made no changes\n\n"
                 "The agent ran but produced no diff. Here's what it said:\n\n"
-                f"{result.implement_response}\n\n"
+                f"{strategy.initial_response}\n\n"
                 "---\n\n"
                 "Removing `ready-to-fix` — re-add it to retry, or close the issue if it's resolved.",
             )
-            ctx.tracker.remove_ready_label(number)
+            ctx.tracker.remove_ready_label(issue.number)
             return
 
         session.commit_and_push()
 
         # Open PR — "Fixes #N" will close the issue on merge
         pr_ref = ctx.tracker.open_pr(
-            title=f"Fix #{number}: {title}",
-            body=f"Fixes #{number}",
+            title=f"Fix #{issue.number}: {issue.title}",
+            body=f"Fixes #{issue.number}",
             head=session.branch,
         )
 
         # Post review trail as a PR comment
         review_comment = format_review_comment(
-            result.review_log, converged=result.converged, max_iterations=max_iterations
+            strategy.review_log, converged=result.converged, max_iterations=max_iterations
         )
         ctx.tracker.comment_on_pr(pr_ref, review_comment)
 

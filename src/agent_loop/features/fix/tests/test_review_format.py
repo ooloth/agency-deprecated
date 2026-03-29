@@ -1,6 +1,6 @@
 """Tests for the review comment formatter."""
 
-from agent_loop.features.fix.engine import ReviewEntry
+from agent_loop.domain.loop.strategies import ReviewEntry
 from agent_loop.features.fix.review import format_review_comment
 
 

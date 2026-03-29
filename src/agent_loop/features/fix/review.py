@@ -1,4 +1,4 @@
-from agent_loop.features.fix.engine import ReviewEntry
+from agent_loop.domain.loop.strategies import ReviewEntry
 
 
 def format_review_comment(

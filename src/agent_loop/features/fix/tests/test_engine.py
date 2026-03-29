@@ -1,16 +1,17 @@
-"""Tests for the implement_and_review engine using stub backends."""
+"""Tests for the antagonistic loop strategy via loop_until_done."""
 
 from collections.abc import Iterator
 
-from agent_loop.features.fix.engine import (
+from agent_loop.domain.loop.engine import (
     AddressingFeedback,
     EngineEvent,
-    ImplementAndReviewInput,
     Implementing,
     NoChanges,
     ReviewApproved,
-    implement_and_review,
+    loop_until_done,
 )
+from agent_loop.domain.loop.strategies import AntagonisticStrategy
+from agent_loop.domain.loop.work import WorkSpec
 
 
 class StubAgent:
@@ -62,57 +63,53 @@ def _make_task(
     diffs: list[str],
     max_iterations: int = 5,
     context: str = "",
-) -> tuple[ImplementAndReviewInput, list[EngineEvent]]:
+) -> tuple[AntagonisticStrategy, WorkSpec, StubVCS, int, str, list[EngineEvent]]:
     events: list[EngineEvent] = []
-    task = ImplementAndReviewInput(
-        title="Test issue",
-        body="Fix the thing.",
+    strategy = AntagonisticStrategy(
         implement_agent=StubAgent(implement_responses),
         review_agent=StubAgent(review_responses),
-        vcs=StubVCS(diffs),
-        max_iterations=max_iterations,
-        context=context,
         fix_prompt_template="Fix: {title}\n{body}",
         review_prompt="Review this diff.",
-        on_progress=events.append,
     )
-    return task, events
+    work = WorkSpec(title="Test issue", body="Fix the thing.")
+    vcs = StubVCS(diffs)
+    return strategy, work, vcs, max_iterations, context, events
 
 
 class TestImplementAndReview:
     def test_approved_first_try(self) -> None:
-        task, events = _make_task(
+        strategy, work, vcs, max_iter, context, events = _make_task(
             implement_responses=["fixed it"],
             review_responses=["**Verdict**: LGTM"],
             # diff_staged called twice: once in the review loop, once for has_changes
             diffs=["diff content", "diff content"],
         )
-        result = implement_and_review(task)
+        result = loop_until_done(work, strategy, vcs, max_iter, context, events.append)
 
         assert result.converged is True
         assert result.has_changes is True
-        assert result.implement_response == "fixed it"
-        assert len(result.review_log) == 1
-        assert result.review_log[0]["approved"] is True
+        assert strategy.initial_response == "fixed it"
+        assert len(strategy.review_log) == 1
+        assert strategy.review_log[0]["approved"] is True
         assert Implementing() in events
         assert any(isinstance(e, ReviewApproved) for e in events)
 
     def test_no_changes_after_implementation(self) -> None:
-        task, events = _make_task(
+        strategy, work, vcs, max_iter, context, events = _make_task(
             implement_responses=["nothing to do"],
             review_responses=[],
             # Empty diff after staging → no changes
             diffs=["", ""],
         )
-        result = implement_and_review(task)
+        result = loop_until_done(work, strategy, vcs, max_iter, context, events.append)
 
         assert result.converged is False
         assert result.has_changes is False
-        assert result.review_log == []
+        assert strategy.review_log == []
         assert NoChanges() in events
 
     def test_feedback_addressed_then_approved(self) -> None:
-        task, events = _make_task(
+        strategy, work, vcs, max_iter, context, events = _make_task(
             implement_responses=["first attempt", "addressed feedback"],
             review_responses=[
                 "**Verdict**: CONCERNS\n\n#### 🔧 Required Changes\n- Fix the edge case",
@@ -121,16 +118,16 @@ class TestImplementAndReview:
             # diff after impl, diff after review1, diff after address, diff after review2, final
             diffs=["diff1", "diff2", "diff3", "diff3"],
         )
-        result = implement_and_review(task)
+        result = loop_until_done(work, strategy, vcs, max_iter, context, events.append)
 
         assert result.converged is True
-        assert len(result.review_log) == 2
-        assert result.review_log[0]["approved"] is False
-        assert result.review_log[1]["approved"] is True
+        assert len(strategy.review_log) == 2
+        assert strategy.review_log[0]["approved"] is False
+        assert strategy.review_log[1]["approved"] is True
         assert AddressingFeedback() in events
 
     def test_max_iterations_exhausted(self) -> None:
-        task, events = _make_task(
+        strategy, work, vcs, max_iter, context, events = _make_task(
             implement_responses=["attempt1", "attempt2"],
             review_responses=[
                 "**Verdict**: CONCERNS\n\nStill wrong.",
@@ -139,24 +136,26 @@ class TestImplementAndReview:
             diffs=["diff", "diff", "diff", "diff"],
             max_iterations=2,
         )
-        result = implement_and_review(task)
+        result = loop_until_done(work, strategy, vcs, max_iter, context, events.append)
 
         assert result.converged is False
         assert result.has_changes is True
-        assert len(result.review_log) == 2
+        assert len(strategy.review_log) == 2
 
     def test_context_prepended_to_prompts(self) -> None:
-        task, events = _make_task(
+        strategy, work, vcs, max_iter, context, events = _make_task(
             implement_responses=["done"],
             review_responses=["**Verdict**: LGTM"],
             diffs=["diff", "diff"],
             context="This is a Python project.",
         )
-        implement_and_review(task)
+        loop_until_done(work, strategy, vcs, max_iter, context, events.append)
 
-        assert isinstance(task.implement_agent, StubAgent)
-        assert "Project context:" in task.implement_agent.prompts[0]
-        assert "This is a Python project." in task.implement_agent.prompts[0]
+        impl_agent = strategy._implement_agent
+        assert isinstance(impl_agent, StubAgent)
+        assert "Project context:" in impl_agent.prompts[0]
+        assert "This is a Python project." in impl_agent.prompts[0]
 
-        assert isinstance(task.review_agent, StubAgent)
-        assert "Project context:" in task.review_agent.prompts[0]
+        review_agent = strategy._review_agent
+        assert isinstance(review_agent, StubAgent)
+        assert "Project context:" in review_agent.prompts[0]

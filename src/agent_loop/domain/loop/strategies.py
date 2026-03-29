@@ -1,0 +1,181 @@
+"""Concrete loop strategies."""
+
+from __future__ import annotations
+
+import re
+import time
+from typing import TypedDict
+
+from agent_loop.domain.loop.engine import (
+    AddressingFeedback,
+    Implementing,
+    LoopResult,
+    NoChanges,
+    ProgressCallback,
+    ReviewApproved,
+    ReviewRejected,
+)
+from agent_loop.domain.loop.termination import ReviewApproval
+from agent_loop.domain.loop.work import WorkSpec
+from agent_loop.domain.ports.agent_backend import AgentBackend
+from agent_loop.domain.ports.vcs_backend import VCSBackend
+
+
+class ReviewEntry(TypedDict):
+    iteration: int
+    approved: bool
+    feedback: str
+
+
+def summarize_feedback(feedback: str, max_len: int = 80) -> str:
+    """Extract a one-line summary from reviewer feedback."""
+    # Look for the Required Changes section first
+    match = re.search(r"#{1,4}\s*🔧\s*Required Changes\s*\n(.+)", feedback)
+    if match:
+        summary = match.group(1).strip()
+    else:
+        # Look for the CONCERNS verdict and take the line after it
+        match = re.search(r"\*\*Verdict\*\*:\s*CONCERNS\s*\n+(.+)", feedback)
+        if match:
+            summary = match.group(1).strip()
+        else:
+            # Fall back to first substantive line
+            for line in feedback.split("\n"):
+                stripped = line.strip()
+                if (
+                    stripped
+                    and not stripped.startswith("#")
+                    and not stripped.startswith("**")
+                    and not stripped.startswith("---")
+                    and not stripped.startswith(">")
+                ):
+                    summary = stripped
+                    break
+            else:
+                summary = "(no details)"
+    # Clean up markdown artifacts
+    summary = re.sub(r"\*\*(.+?)\*\*", r"\1", summary)  # remove bold
+    summary = re.sub(r"`(.+?)`", r"\1", summary)  # remove inline code
+    summary = summary.lstrip("- ").lstrip("* ")  # remove list markers
+    if len(summary) > max_len:
+        summary = summary[: max_len - 1] + "…"
+    return summary
+
+
+class AntagonisticStrategy:
+    """Implement → review → address-feedback loop with two opposing agents.
+
+    After execution, strategy-specific state is available via attributes:
+    - review_log: list[ReviewEntry] — full review trail
+    - initial_response: str — the implement agent's first response
+    """
+
+    def __init__(
+        self,
+        implement_agent: AgentBackend,
+        review_agent: AgentBackend,
+        fix_prompt_template: str,
+        review_prompt: str,
+    ) -> None:
+        self._implement_agent = implement_agent
+        self._review_agent = review_agent
+        self._fix_prompt_template = fix_prompt_template
+        self._review_prompt = review_prompt
+        self._review_approval = ReviewApproval()
+        self.review_log: list[ReviewEntry] = []
+        self.initial_response: str = ""
+
+    def execute(
+        self,
+        work: WorkSpec,
+        vcs: VCSBackend,
+        max_iterations: int,
+        context: str,
+        on_progress: ProgressCallback,
+    ) -> LoopResult:
+        notify = on_progress
+
+        # Initial implementation
+        fix_prompt = self._fix_prompt_template.format(title=work.title, body=work.body)
+        if context:
+            fix_prompt = f"Project context:\n{context}\n\n{fix_prompt}"
+
+        notify(Implementing())
+        self.initial_response = self._implement_agent.run(fix_prompt)
+        vcs.stage_all()
+
+        # Review loop
+        iteration = 0
+        converged = False
+
+        while iteration < max_iterations:
+            iteration += 1
+
+            diff = vcs.diff_staged()
+            if not diff:
+                notify(NoChanges())
+                break
+
+            review_prompt = (
+                self._review_prompt
+                + f"\n\n## Issue being fixed\n\nTitle: {work.title}\nDescription:\n{work.body}"
+                + f"\n\n## Diff to review\n\n{diff}"
+            )
+            if context:
+                review_prompt = f"Project context:\n{context}\n\n{review_prompt}"
+
+            t0 = time.monotonic()
+            feedback = self._review_agent.run(review_prompt)
+            review_elapsed = int(time.monotonic() - t0)
+            approved = self._review_approval.is_met(feedback)
+
+            self.review_log.append(
+                {
+                    "iteration": iteration,
+                    "approved": approved,
+                    "feedback": feedback,
+                }
+            )
+
+            if approved:
+                notify(
+                    ReviewApproved(
+                        iteration=iteration,
+                        max_iterations=max_iterations,
+                        elapsed_seconds=review_elapsed,
+                    )
+                )
+                converged = True
+                break
+
+            summary = summarize_feedback(feedback)
+            is_last_iteration = iteration >= max_iterations
+            notify(
+                ReviewRejected(
+                    iteration=iteration,
+                    max_iterations=max_iterations,
+                    elapsed_seconds=review_elapsed,
+                    summary=summary,
+                )
+            )
+
+            if is_last_iteration:
+                break
+
+            # Address feedback
+            fix_feedback_prompt = (
+                f"Your previous fix received this review feedback:\n\n{feedback}\n\n"
+                f"Original issue:\nTitle: {work.title}\nDescription:\n{work.body}\n\n"
+                f"Please address the concerns. Prefer the simplest solution — if a problem\n"
+                f"can be eliminated rather than handled, do that instead."
+            )
+            notify(AddressingFeedback())
+            self._implement_agent.run(fix_feedback_prompt)
+            vcs.stage_all()
+
+        has_changes = bool(vcs.diff_staged())
+        return LoopResult(
+            converged=converged,
+            has_changes=has_changes,
+            iterations=iteration,
+        )

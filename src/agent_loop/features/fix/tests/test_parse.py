@@ -1,29 +1,32 @@
 """Tests for pure parsing functions used by the fix pipeline."""
 
-from agent_loop.features.fix.engine import parse_review_verdict, summarize_feedback
+from agent_loop.domain.loop.strategies import summarize_feedback
+from agent_loop.domain.loop.termination import ReviewApproval
 
-# --- parse_review_verdict ---
+# --- ReviewApproval.is_met (LGTM detection) ---
+
+_review_approval = ReviewApproval()
 
 
-class TestParseReviewVerdict:
+class TestReviewApproval:
     def test_lgtm_uppercase(self) -> None:
-        assert parse_review_verdict("**Verdict**: LGTM") is True
+        assert _review_approval.is_met("**Verdict**: LGTM") is True
 
     def test_lgtm_mixed_case(self) -> None:
-        assert parse_review_verdict("**Verdict**: lgtm") is True
+        assert _review_approval.is_met("**Verdict**: lgtm") is True
 
     def test_concerns(self) -> None:
-        assert parse_review_verdict("**Verdict**: CONCERNS") is False
+        assert _review_approval.is_met("**Verdict**: CONCERNS") is False
 
     def test_no_verdict(self) -> None:
-        assert parse_review_verdict("This looks fine.") is False
+        assert _review_approval.is_met("This looks fine.") is False
 
     def test_lgtm_in_word(self) -> None:
         # "LGTM" must be a whole word
-        assert parse_review_verdict("not_LGTM_here") is False
+        assert _review_approval.is_met("not_LGTM_here") is False
 
     def test_lgtm_as_word_boundary(self) -> None:
-        assert parse_review_verdict("Verdict: LGTM!") is True
+        assert _review_approval.is_met("Verdict: LGTM!") is True
 
 
 # --- summarize_feedback ---
