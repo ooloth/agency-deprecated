@@ -14,8 +14,10 @@ from agent_loop.domain.loop.engine import (
     ProgressCallback,
     ReviewApproved,
     ReviewRejected,
+    StepCompleted,
+    StepStarted,
 )
-from agent_loop.domain.loop.termination import ReviewApproval
+from agent_loop.domain.loop.termination import OutputSignal, ReviewApproval
 from agent_loop.domain.loop.work import WorkSpec
 from agent_loop.domain.ports.agent_backend import AgentBackend
 from agent_loop.domain.ports.vcs_backend import VCSBackend
@@ -174,6 +176,79 @@ class AntagonisticStrategy:
             vcs.stage_all()
 
         has_changes = bool(vcs.diff_staged())
+        return LoopResult(
+            converged=converged,
+            has_changes=has_changes,
+            iterations=iteration,
+        )
+
+
+class RalphStrategy:
+    """Fresh-eyes iterative refinement with a single agent.
+
+    Each iteration the agent sees the current codebase with no memory of
+    prior iterations, compares it against the goal, and makes one
+    improvement — either new progress or correcting a prior step. Commits
+    after each iteration for crash safety and audit trail.
+
+    After execution, strategy-specific state is available via attributes:
+    - responses: list[str] — each iteration's agent response
+    """
+
+    def __init__(
+        self,
+        agent: AgentBackend,
+        prompt_template: str,
+    ) -> None:
+        self._agent = agent
+        self._prompt_template = prompt_template
+        self._output_signal = OutputSignal()
+        self.responses: list[str] = []
+
+    def execute(
+        self,
+        work: WorkSpec,
+        vcs: VCSBackend,
+        max_iterations: int,
+        context: str,
+        on_progress: ProgressCallback,
+    ) -> LoopResult:
+        notify = on_progress
+        converged = False
+        iteration = 0
+        has_changes = False
+
+        for iteration in range(1, max_iterations + 1):
+            prompt = self._prompt_template.format(goal=work.body)
+            if context:
+                prompt = f"Project context:\n{context}\n\n{prompt}"
+
+            notify(StepStarted(iteration=iteration, max_iterations=max_iterations))
+            t0 = time.monotonic()
+            response = self._agent.run(prompt)
+            elapsed = int(time.monotonic() - t0)
+            self.responses.append(response)
+
+            # Commit any changes this iteration produced
+            vcs.stage_all()
+            if vcs.diff_staged():
+                vcs.commit(f"ralph: step {iteration}")
+                has_changes = True
+
+            done = self._output_signal.is_met(response)
+            notify(
+                StepCompleted(
+                    iteration=iteration,
+                    max_iterations=max_iterations,
+                    elapsed_seconds=elapsed,
+                    done=done,
+                )
+            )
+
+            if done:
+                converged = True
+                break
+
         return LoopResult(
             converged=converged,
             has_changes=has_changes,

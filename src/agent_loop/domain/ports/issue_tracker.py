@@ -60,7 +60,7 @@ class IssueTracker(Protocol):
         """Return the repo's default branch name."""
         ...
 
-    def open_pr(self, title: str, body: str, head: str) -> str:
+    def open_pr(self, title: str, body: str, head: str, *, draft: bool = False) -> str:
         """Open a pull request. Returns a reference usable by comment_on_pr."""
         ...
 

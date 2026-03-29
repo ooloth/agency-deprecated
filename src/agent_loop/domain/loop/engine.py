@@ -48,7 +48,33 @@ class AddressingFeedback:
     """The implement agent is addressing review feedback."""
 
 
-EngineEvent = Implementing | NoChanges | ReviewApproved | ReviewRejected | AddressingFeedback
+@dataclass(frozen=True)
+class StepStarted:
+    """A Ralph-style agent is starting a fresh-eyes iteration."""
+
+    iteration: int
+    max_iterations: int
+
+
+@dataclass(frozen=True)
+class StepCompleted:
+    """A Ralph-style agent finished an iteration."""
+
+    iteration: int
+    max_iterations: int
+    elapsed_seconds: int
+    done: bool
+
+
+EngineEvent = (
+    Implementing
+    | NoChanges
+    | ReviewApproved
+    | ReviewRejected
+    | AddressingFeedback
+    | StepStarted
+    | StepCompleted
+)
 ProgressCallback = Callable[[EngineEvent], None]
 
 

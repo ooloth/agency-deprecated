@@ -16,3 +16,13 @@ class WorkSpec:
 def from_issue(issue: Issue) -> WorkSpec:
     """Create a WorkSpec from a tracked issue."""
     return WorkSpec(title=issue.title, body=issue.body)
+
+
+def from_prompt(prompt: str) -> WorkSpec:
+    """Create a WorkSpec from a user-provided goal prompt.
+
+    Title is a truncation for log display; body is the full prompt.
+    """
+    max_title = 60
+    title = prompt[:max_title].rstrip() + "…" if len(prompt) > max_title else prompt
+    return WorkSpec(title=title, body=prompt)

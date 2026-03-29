@@ -136,9 +136,12 @@ class GitHubTracker:
     def get_default_branch(self) -> str:
         return _gh("repo", "view", "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name")
 
-    def open_pr(self, title: str, body: str, head: str) -> str:
+    def open_pr(self, title: str, body: str, head: str, *, draft: bool = False) -> str:
         """Open a pull request and return the branch name as a usable pr_ref."""
-        _gh("pr", "create", "--title", title, "--body", body, "--head", head)
+        cmd = ["pr", "create", "--title", title, "--body", body, "--head", head]
+        if draft:
+            cmd.append("--draft")
+        _gh(*cmd)
         return head
 
     def comment_on_pr(self, pr_ref: str, body: str) -> None:

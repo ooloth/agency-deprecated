@@ -15,3 +15,13 @@ class ReviewApproval:
 
     def is_met(self, response: str) -> bool:
         return bool(re.search(r"\bLGTM\b", response, re.IGNORECASE))
+
+
+class OutputSignal:
+    """The response contains a completion token on its own line."""
+
+    def __init__(self, token: str = "##DONE##") -> None:
+        self._token = token
+
+    def is_met(self, response: str) -> bool:
+        return any(line.strip() == self._token for line in response.splitlines())
