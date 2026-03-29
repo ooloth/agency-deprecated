@@ -12,6 +12,9 @@ class Config:
     max_iterations: int = 5
     context: str = ""
 
+    # Model overrides — None means "fall back to env var, then built-in default".
+    plan_model: str | None = None
+
     # Prompt overrides — None means "use the built-in default".
     analyze_prompt: str | None = None
     fix_prompt_template: str | None = None

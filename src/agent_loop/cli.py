@@ -49,10 +49,18 @@ def main() -> None:
     fix_parser = sub.add_parser("fix", help="Fix ready-to-fix issues")
     fix_parser.add_argument("--issue", "-i", type=int, help="Fix a specific issue number")
 
-    sub.add_parser(
+    plan_parser = sub.add_parser(
         "plan",
         help="Interactive planning session to produce a ralph-ready plan file",
-    ).add_argument("idea", nargs="?", help="Your rough idea (optional — the agent will ask)")
+    )
+    plan_parser.add_argument(
+        "idea", nargs="?", help="Your rough idea (optional — the agent will ask)"
+    )
+    plan_parser.add_argument(
+        "--model",
+        "-m",
+        help="Model override (default: ANTHROPIC_DEFAULT_OPUS_MODEL or claude-opus-4-6)",
+    )
 
     ralph_parser = sub.add_parser("ralph", help="Iterative fresh-eyes refinement toward a goal")
     ralph_goal = ralph_parser.add_mutually_exclusive_group(required=True)
@@ -97,7 +105,7 @@ def main() -> None:
         elif args.command == "fix":
             cmd_fix(ctx, issue_number=args.issue)
         elif args.command == "plan":
-            cmd_plan(ctx, idea=args.idea)
+            cmd_plan(ctx, idea=args.idea, model=args.model)
         elif args.command == "ralph":
             plan_or_file = args.plan or args.file
             cmd_ralph(
