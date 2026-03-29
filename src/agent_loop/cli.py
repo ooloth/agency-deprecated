@@ -7,6 +7,7 @@ from agent_loop.domain.context import AppContext
 from agent_loop.domain.errors import AgentLoopError
 from agent_loop.features.analyze.command import cmd_analyze
 from agent_loop.features.fix.command import cmd_fix
+from agent_loop.features.plan.command import cmd_plan
 from agent_loop.features.ralph.command import cmd_ralph
 from agent_loop.features.watch.command import cmd_watch
 from agent_loop.io.adapters.claude_cli import EDIT_TOOLS, READ_ONLY_TOOLS, ClaudeCliBackend
@@ -28,7 +29,9 @@ def main() -> None:
               5. agent-loop watch             → poll continuously
 
             standalone:
-              agent-loop ralph -p 'add type hints to foo.py' -n 10
+              agent-loop plan 'add error handling'                   → interactive planning
+              agent-loop ralph --plan .plans/add-error-handling.md   → execute a plan
+              agent-loop ralph -p 'add type hints to foo.py' -n 10  → quick goal
         """),
     )
     parser.add_argument(
@@ -46,10 +49,16 @@ def main() -> None:
     fix_parser = sub.add_parser("fix", help="Fix ready-to-fix issues")
     fix_parser.add_argument("--issue", "-i", type=int, help="Fix a specific issue number")
 
+    sub.add_parser(
+        "plan",
+        help="Interactive planning session to produce a ralph-ready plan file",
+    ).add_argument("idea", nargs="?", help="Your rough idea (optional — the agent will ask)")
+
     ralph_parser = sub.add_parser("ralph", help="Iterative fresh-eyes refinement toward a goal")
     ralph_goal = ralph_parser.add_mutually_exclusive_group(required=True)
     ralph_goal.add_argument("--prompt", "-p", help="Goal for the agent to achieve")
     ralph_goal.add_argument("--file", "-f", type=Path, help="Markdown file containing the goal")
+    ralph_goal.add_argument("--plan", "-P", type=Path, help="Plan file from 'agent-loop plan'")
     ralph_parser.add_argument(
         "--max-iterations",
         "-n",
@@ -87,8 +96,13 @@ def main() -> None:
             cmd_analyze(ctx)
         elif args.command == "fix":
             cmd_fix(ctx, issue_number=args.issue)
+        elif args.command == "plan":
+            cmd_plan(ctx, idea=args.idea)
         elif args.command == "ralph":
-            cmd_ralph(ctx, prompt=args.prompt, file=args.file, max_iterations=args.max_iterations)
+            plan_or_file = args.plan or args.file
+            cmd_ralph(
+                ctx, prompt=args.prompt, file=plan_or_file, max_iterations=args.max_iterations
+            )
         elif args.command == "watch":
             cmd_watch(ctx, interval=args.interval, max_open_issues=args.max_open_issues)
     except AgentLoopError as exc:
