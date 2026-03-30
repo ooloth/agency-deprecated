@@ -51,6 +51,12 @@ def _build_parser() -> argparse.ArgumentParser:
         default=Path.cwd(),
         help="Path to the project (default: current directory)",
     )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Show debug output (subprocess commands, timing)",
+    )
 
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -199,7 +205,7 @@ def main() -> None:
     """Parse CLI arguments and dispatch to the requested feature command."""
     parser = _build_parser()
     args = parser.parse_args()
-    configure_logging()
+    configure_logging(verbose=args.verbose)
 
     project_dir = args.project_dir.resolve()
     config = load_config(project_dir)

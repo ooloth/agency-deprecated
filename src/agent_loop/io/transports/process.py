@@ -1,9 +1,13 @@
 """Thin subprocess wrapper with structured error handling."""
 
+import logging
 import subprocess
+import time
 from pathlib import Path
 
 from agent_loop.io.errors import SubprocessError
+
+log = logging.getLogger("agent_loop")
 
 
 def run(
@@ -18,9 +22,12 @@ def run(
     Raises SubprocessError on non-zero exit (when check=True) instead of
     calling sys.exit, so callers higher up can decide how to handle it.
     """
+    cmd_str = " ".join(cmd)
+    log.debug("$ %s", cmd_str)
+    t0 = time.monotonic()
     result = subprocess.run(cmd, capture_output=capture, text=True, cwd=cwd, check=False)  # noqa: S603
+    elapsed = time.monotonic() - t0
+    log.debug("  → exit %d (%.1fs)", result.returncode, elapsed)
     if check and result.returncode != 0:
-        raise SubprocessError(
-            cmd=" ".join(cmd), stdout=result.stdout or "", stderr=result.stderr or ""
-        )
+        raise SubprocessError(cmd=cmd_str, stdout=result.stdout or "", stderr=result.stderr or "")
     return result.stdout.strip() if capture else ""

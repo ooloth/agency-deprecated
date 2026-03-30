@@ -5,12 +5,12 @@ import logging
 log = logging.getLogger("agent_loop")
 
 
-def configure_logging() -> None:
+def configure_logging(*, verbose: bool = False) -> None:
     """Set up the agent_loop logger for timestamped console output."""
     handler = logging.StreamHandler()
     handler.setFormatter(logging.Formatter("[%(asctime)s] %(message)s", datefmt="%H:%M:%S"))
     log.addHandler(handler)
-    log.setLevel(logging.INFO)
+    log.setLevel(logging.DEBUG if verbose else logging.INFO)
 
 
 def log_step(msg: str, *, last: bool = False) -> None:
