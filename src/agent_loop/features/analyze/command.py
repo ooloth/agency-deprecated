@@ -1,3 +1,5 @@
+"""Analyze command — scan codebase and file issues."""
+
 import time
 
 from agent_loop.domain.context import AppContext
@@ -9,7 +11,7 @@ from agent_loop.io.observability.logging import log
 
 def cmd_analyze(ctx: AppContext, agent: AgentBackend) -> None:
     """Analyze the codebase and create GitHub issues."""
-    log("🔍 Analyzing codebase...")
+    log.info("🔍 Analyzing codebase...")
 
     prompt = ctx.config.analyze_prompt or ANALYZE_PROMPT
     if ctx.config.context:
@@ -21,7 +23,7 @@ def cmd_analyze(ctx: AppContext, agent: AgentBackend) -> None:
     found_issues = parse_analysis_results(raw)
 
     elapsed = int(time.monotonic() - t0)
-    log(f"🔍 Analysis complete ({elapsed}s) — {len(found_issues)} issue(s) found")
+    log.info("🔍 Analysis complete (%ds) — %d issue(s) found", elapsed, len(found_issues))
 
     if not found_issues:
         return
@@ -31,14 +33,14 @@ def cmd_analyze(ctx: AppContext, agent: AgentBackend) -> None:
     created = 0
     for i, found in enumerate(found_issues):
         if found.title in existing_titles:
-            log(f"├── ⏭️  Skipped (already exists): {found.title}")
+            log.info("├── ⏭️  Skipped (already exists): %s", found.title)
             continue
 
         ctx.tracker.create_issue(found)
         is_last = i == len(found_issues) - 1
         connector = "└──" if is_last else "├──"
-        log(f"{connector} 📋 Created: {found.title}")
+        log.info("%s 📋 Created: %s", connector, found.title)
         created += 1
 
     skipped = len(found_issues) - created
-    log(f"✅ {created} created, {skipped} skipped. Add 'ready-to-fix' when ready.")
+    log.info("✅ %d created, %d skipped. Add 'ready-to-fix' when ready.", created, skipped)

@@ -1,24 +1,25 @@
-from datetime import datetime
+"""Timestamped console logging for CLI output."""
+
+import logging
+
+log = logging.getLogger("agent_loop")
 
 
-def log(msg: str, prefix: str = "") -> None:
-    """Log a timestamped message."""
-    timestamp = datetime.now().astimezone().strftime("%H:%M:%S")
-    print(f"[{timestamp}] {prefix}{msg}")
-
-
-def log_blank() -> None:
-    """Print a blank line to separate log sections."""
-    print()
+def configure_logging() -> None:
+    """Set up the agent_loop logger for timestamped console output."""
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("[%(asctime)s] %(message)s", datefmt="%H:%M:%S"))
+    log.addHandler(handler)
+    log.setLevel(logging.INFO)
 
 
 def log_step(msg: str, *, last: bool = False) -> None:
     """Log a step under the current issue."""
     connector = "└──" if last else "├──"
-    log(f"{connector} {msg}")
+    log.info("%s %s", connector, msg)
 
 
 def log_detail(msg: str, *, last_step: bool = False) -> None:
     """Log a detail line under the current step."""
     rail = " " if last_step else "│"
-    log(f"{rail}      {msg}")
+    log.info("%s      %s", rail, msg)

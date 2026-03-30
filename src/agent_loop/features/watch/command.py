@@ -1,19 +1,29 @@
+"""Watch command — poll for work in a continuous loop."""
+
 import signal
 import time
+from dataclasses import dataclass
 
 from agent_loop.domain.context import AppContext
 from agent_loop.domain.errors import AgentLoopError
 from agent_loop.domain.ports.agent_backend import AgentBackend
 from agent_loop.features.analyze.command import cmd_analyze
 from agent_loop.features.fix.command import cmd_fix
-from agent_loop.io.observability.logging import log, log_blank
+from agent_loop.io.observability.logging import log
+
+
+@dataclass(frozen=True)
+class WatchAgents:
+    """The three agent backends needed by the watch loop."""
+
+    analysis: AgentBackend
+    coding: AgentBackend
+    review: AgentBackend
 
 
 def cmd_watch(
     ctx: AppContext,
-    analysis_agent: AgentBackend,
-    coding_agent: AgentBackend,
-    review_agent: AgentBackend,
+    agents: WatchAgents,
     interval: int,
     max_open_issues: int,
 ) -> None:
@@ -25,57 +35,66 @@ def cmd_watch(
     """
     stopping = False
 
-    def handle_signal(sig: int, frame: object) -> None:
+    def handle_signal(_sig: int, _frame: object) -> None:
         nonlocal stopping
         stopping = True
-        log("\n⏹️  Stopping after current step completes...")
+        log.info("\n⏹️  Stopping after current step completes...")
 
     signal.signal(signal.SIGINT, handle_signal)
     signal.signal(signal.SIGTERM, handle_signal)
 
-    log(f"👀 Watching {ctx.project_dir.name} (interval={interval}s, max_open={max_open_issues})")
-    log("   Press Ctrl+C to stop gracefully.")
-    log_blank()
+    log.info(
+        "👀 Watching %s (interval=%ds, max_open=%d)",
+        ctx.project_dir.name,
+        interval,
+        max_open_issues,
+    )
+    log.info("   Press Ctrl+C to stop gracefully.")
+    log.info("")
 
     while not stopping:
         try:
-            _poll_once(ctx, analysis_agent, coding_agent, review_agent, max_open_issues)
+            _poll_once(ctx, agents, max_open_issues)
         except AgentLoopError as exc:
-            log(f"❌ Error during poll: {exc}")
-            log("   Will retry next cycle.")
+            log.info("❌ Error during poll: %s", exc)
+            log.info("   Will retry next cycle.")
 
         if stopping:
             break
 
         # Sleep in small increments so Ctrl+C is responsive
-        log(f"😴 Sleeping {interval}s...")
-        log_blank()
+        log.info("😴 Sleeping %ds...", interval)
+        log.info("")
         for _ in range(interval):
             if stopping:
                 break
             time.sleep(1)
 
-    log("👋 Stopped.")
+    log.info("👋 Stopped.")
 
 
 def _poll_once(
     ctx: AppContext,
-    analysis_agent: AgentBackend,
-    coding_agent: AgentBackend,
-    review_agent: AgentBackend,
+    agents: WatchAgents,
     max_open_issues: int,
 ) -> None:
     """Run one fix + analyze cycle. Exceptions propagate to the caller."""
     # Step 1: Fix any ready-to-fix issues
-    cmd_fix(ctx, coding_agent, review_agent)
+    cmd_fix(ctx, agents.coding, agents.review)
 
     # Step 2: Analyze if queue is below cap
     open_count = len(ctx.tracker.list_awaiting_review())
 
     if open_count >= max_open_issues:
-        log(
-            f"⏸️  {open_count} issue(s) awaiting review (cap: {max_open_issues}) — skipping analysis"
+        log.info(
+            "⏸️  %d issue(s) awaiting review (cap: %d) — skipping analysis",
+            open_count,
+            max_open_issues,
         )
     else:
-        log(f"🔍 {open_count} issue(s) awaiting review (cap: {max_open_issues}) — running analysis")
-        cmd_analyze(ctx, analysis_agent)
+        log.info(
+            "🔍 %d issue(s) awaiting review (cap: %d) — running analysis",
+            open_count,
+            max_open_issues,
+        )
+        cmd_analyze(ctx, agents.analysis)

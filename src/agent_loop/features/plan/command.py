@@ -1,3 +1,5 @@
+"""Plan command — interactive planning session for ralph-ready plans."""
+
 from agent_loop.domain.context import AppContext
 from agent_loop.domain.ports.agent_backend import InteractiveAgentBackend
 from agent_loop.features.plan.prompts import PLAN_SYSTEM_PROMPT
@@ -13,6 +15,8 @@ def cmd_plan(ctx: AppContext, agent: InteractiveAgentBackend, *, idea: str | Non
     if ctx.config.context:
         system_prompt = f"Project context:\n{ctx.config.context}\n\n{system_prompt}"
 
-    log(f"📋 Planning session — plans will be written to {plans_dir.relative_to(ctx.project_dir)}/")
+    log.info(
+        "📋 Planning session — plans will be written to %s/", plans_dir.relative_to(ctx.project_dir)
+    )
 
     agent.session(system_prompt=system_prompt, initial_message=idea)

@@ -4,6 +4,7 @@ from collections.abc import Iterator
 
 from agent_loop.domain.loop.engine import (
     EngineEvent,
+    LoopOptions,
     StepCompleted,
     StepStarted,
     loop_until_done,
@@ -72,7 +73,9 @@ class TestRalphStrategy:
         work = WorkSpec(title="test", body="add type hints")
         events: list[EngineEvent] = []
 
-        result = loop_until_done(work, strategy, vcs, 5, "", events.append)
+        result = loop_until_done(
+            work, strategy, vcs, LoopOptions(max_iterations=5, on_progress=events.append)
+        )
 
         assert result.converged is True
         assert result.iterations == 2
@@ -89,7 +92,9 @@ class TestRalphStrategy:
         work = WorkSpec(title="test", body="big task")
         events: list[EngineEvent] = []
 
-        result = loop_until_done(work, strategy, vcs, 3, "", events.append)
+        result = loop_until_done(
+            work, strategy, vcs, LoopOptions(max_iterations=3, on_progress=events.append)
+        )
 
         assert result.converged is False
         assert result.iterations == 3
@@ -105,7 +110,9 @@ class TestRalphStrategy:
         work = WorkSpec(title="test", body="check things")
         events: list[EngineEvent] = []
 
-        result = loop_until_done(work, strategy, vcs, 5, "", events.append)
+        result = loop_until_done(
+            work, strategy, vcs, LoopOptions(max_iterations=5, on_progress=events.append)
+        )
 
         assert result.converged is True
         assert result.iterations == 2
@@ -117,7 +124,9 @@ class TestRalphStrategy:
         vcs = StubVCS(["diff"])
         work = WorkSpec(title="test", body="the goal")
 
-        loop_until_done(work, strategy, vcs, 5, "Python project", lambda _: None)
+        loop_until_done(
+            work, strategy, vcs, LoopOptions(max_iterations=5, context="Python project")
+        )
 
         assert "Project context:" in agent.prompts[0]
         assert "Python project" in agent.prompts[0]
@@ -131,7 +140,9 @@ class TestRalphStrategy:
         work = WorkSpec(title="test", body="goal")
         events: list[EngineEvent] = []
 
-        loop_until_done(work, strategy, vcs, 5, "", events.append)
+        loop_until_done(
+            work, strategy, vcs, LoopOptions(max_iterations=5, on_progress=events.append)
+        )
 
         assert events[0] == StepStarted(iteration=1, max_iterations=5)
         assert isinstance(events[1], StepCompleted)
@@ -148,7 +159,7 @@ class TestRalphStrategy:
         vcs = StubVCS(["diff"])
         work = WorkSpec(title="test", body="add tests to foo.py")
 
-        loop_until_done(work, strategy, vcs, 5, "", lambda _: None)
+        loop_until_done(work, strategy, vcs, LoopOptions(max_iterations=5))
 
         assert "Do this: add tests to foo.py" in agent.prompts[0]
 
@@ -163,7 +174,7 @@ class TestRalphStrategy:
         vcs = StubVCS(["diff", "diff"])
         work = WorkSpec(title="test", body="the goal")
 
-        loop_until_done(work, strategy, vcs, 5, "", lambda _: None)
+        loop_until_done(work, strategy, vcs, LoopOptions(max_iterations=5))
 
         # First prompt should NOT have scratchpad context
         assert "previous iteration" not in agent.prompts[0]
@@ -184,7 +195,7 @@ class TestRalphStrategy:
         vcs = StubVCS(["diff", "diff"])
         work = WorkSpec(title="test", body="the goal")
 
-        result = loop_until_done(work, strategy, vcs, 5, "", lambda _: None)
+        result = loop_until_done(work, strategy, vcs, LoopOptions(max_iterations=5))
 
         # Should still converge — missing scratchpad doesn't break anything
         assert result.converged is True

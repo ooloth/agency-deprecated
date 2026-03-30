@@ -1,3 +1,5 @@
+"""Ralph command — iterative fresh-eyes refinement toward a goal."""
+
 import re
 import time
 from pathlib import Path
@@ -6,6 +8,7 @@ from agent_loop.domain.context import AppContext
 from agent_loop.domain.errors import AgentLoopError
 from agent_loop.domain.loop.engine import (
     EngineEvent,
+    LoopOptions,
     StepCompleted,
     StepStarted,
     loop_until_done,
@@ -64,7 +67,7 @@ def cmd_ralph(
 
     branch = f"ralph/{_slugify(work.title)}"
 
-    log(f"🔁 Ralph: {work.title}")
+    log.info("🔁 Ralph: %s", work.title)
 
     default_branch = ctx.tracker.get_default_branch()
     ctx.vcs.checkout(default_branch)
@@ -82,9 +85,11 @@ def cmd_ralph(
             work=work,
             strategy=strategy,
             vcs=ctx.vcs,
-            max_iterations=max_iterations,
-            context=ctx.config.context,
-            on_progress=_log_ralph_progress,
+            options=LoopOptions(
+                max_iterations=max_iterations,
+                context=ctx.config.context,
+                on_progress=_log_ralph_progress,
+            ),
         )
         elapsed = int(time.monotonic() - t0)
 
