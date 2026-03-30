@@ -4,12 +4,15 @@ Handles branch creation, label locking, and cleanup so that fix_single_issue
 can focus on the issue-resolution logic rather than branch bookkeeping.
 """
 
+import logging
 from types import TracebackType
 from typing import Self
 
 from agent_loop.domain.models.issues import Issue
 from agent_loop.domain.ports.issue_tracker import IssueTracker
 from agent_loop.domain.ports.vcs_backend import VCSBackend
+
+log = logging.getLogger("agent_loop")
 
 
 class BranchSession:
@@ -52,12 +55,21 @@ class BranchSession:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        self._vcs.checkout(self._default_branch)
+        try:
+            self._vcs.checkout(self._default_branch)
+        except Exception:
+            log.exception("BranchSession: failed to checkout %s", self._default_branch)
 
         # Clean up if no commit was pushed — covers both early returns and exceptions.
         if not self._pushed:
-            self._vcs.delete_branch(self._branch)
-            self._tracker.release_issue(self._issue.number)
+            try:
+                self._vcs.delete_branch(self._branch)
+            except Exception:
+                log.exception("BranchSession: failed to delete branch %s", self._branch)
+            try:
+                self._tracker.release_issue(self._issue.number)
+            except Exception:
+                log.exception("BranchSession: failed to release issue #%d", self._issue.number)
 
     def commit_and_push(self) -> None:
         """Commit all staged changes and push the fix branch."""

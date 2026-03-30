@@ -1,11 +1,14 @@
 """IssueTracker backed by the GitHub CLI (gh)."""
 
 import json
+import logging
 from enum import StrEnum
 
 from agent_loop.domain.models.issues import FoundIssue, Issue
 from agent_loop.io.errors import SubprocessError
 from agent_loop.io.transports.process import run
+
+log = logging.getLogger("agent_loop")
 
 # --- GitHub workflow labels (private implementation detail) ---
 # These are GitHub-specific mechanisms for expressing workflow state via issue
@@ -117,7 +120,8 @@ class GitHubTracker:
         """Fetch a single issue by number, or None if not found."""
         try:
             raw = _gh("issue", "view", str(number), "--json", "number,title,body,labels")
-        except SubprocessError:
+        except SubprocessError as exc:
+            log.warning("Failed to fetch issue #%d: %s", number, exc)
             return None
         return _parse_issue(json.loads(raw))
 
