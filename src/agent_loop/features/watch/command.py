@@ -2,6 +2,7 @@
 
 import signal
 import time
+from dataclasses import dataclass
 
 from agent_loop.domain.context import AppContext
 from agent_loop.domain.errors import AgentLoopError
@@ -11,11 +12,18 @@ from agent_loop.features.fix.command import cmd_fix
 from agent_loop.io.observability.logging import log
 
 
+@dataclass(frozen=True)
+class WatchAgents:
+    """The three agent backends needed by the watch loop."""
+
+    analysis: AgentBackend
+    coding: AgentBackend
+    review: AgentBackend
+
+
 def cmd_watch(
     ctx: AppContext,
-    analysis_agent: AgentBackend,
-    coding_agent: AgentBackend,
-    review_agent: AgentBackend,
+    agents: WatchAgents,
     interval: int,
     max_open_issues: int,
 ) -> None:
@@ -46,7 +54,7 @@ def cmd_watch(
 
     while not stopping:
         try:
-            _poll_once(ctx, analysis_agent, coding_agent, review_agent, max_open_issues)
+            _poll_once(ctx, agents, max_open_issues)
         except AgentLoopError as exc:
             log.info("❌ Error during poll: %s", exc)
             log.info("   Will retry next cycle.")
@@ -67,14 +75,12 @@ def cmd_watch(
 
 def _poll_once(
     ctx: AppContext,
-    analysis_agent: AgentBackend,
-    coding_agent: AgentBackend,
-    review_agent: AgentBackend,
+    agents: WatchAgents,
     max_open_issues: int,
 ) -> None:
     """Run one fix + analyze cycle. Exceptions propagate to the caller."""
     # Step 1: Fix any ready-to-fix issues
-    cmd_fix(ctx, coding_agent, review_agent)
+    cmd_fix(ctx, agents.coding, agents.review)
 
     # Step 2: Analyze if queue is below cap
     open_count = len(ctx.tracker.list_awaiting_review())
@@ -91,4 +97,4 @@ def _poll_once(
             open_count,
             max_open_issues,
         )
-        cmd_analyze(ctx, analysis_agent)
+        cmd_analyze(ctx, agents.analysis)

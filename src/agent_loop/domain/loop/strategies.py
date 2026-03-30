@@ -10,9 +10,9 @@ from typing import TypedDict
 from agent_loop.domain.loop.engine import (
     AddressingFeedback,
     Implementing,
+    LoopOptions,
     LoopResult,
     NoChanges,
-    ProgressCallback,
     ReviewApproved,
     ReviewRejected,
     StepCompleted,
@@ -111,12 +111,12 @@ class AntagonisticStrategy:
         self,
         work: WorkSpec,
         vcs: VCSBackend,
-        max_iterations: int,
-        context: str,
-        on_progress: ProgressCallback,
+        options: LoopOptions,
     ) -> LoopResult:
         """Run the implement → review → address-feedback loop."""
-        notify = on_progress
+        notify = options.on_progress
+        max_iterations = options.max_iterations
+        context = options.context
 
         # Initial implementation
         fix_prompt = self._fix_prompt_template.format(title=work.title, body=work.body)
@@ -250,12 +250,12 @@ class RalphStrategy:
         self,
         work: WorkSpec,
         vcs: VCSBackend,
-        max_iterations: int,
-        context: str,
-        on_progress: ProgressCallback,
+        options: LoopOptions,
     ) -> LoopResult:
         """Run fresh-eyes iterations until the goal is met or the cap is hit."""
-        notify = on_progress
+        notify = options.on_progress
+        max_iterations = options.max_iterations
+        context = options.context
         converged = False
         iteration = 0
         has_changes = False

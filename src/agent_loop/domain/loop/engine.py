@@ -98,6 +98,20 @@ class LoopResult:
 
 
 # ---------------------------------------------------------------------------
+# Loop options
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class LoopOptions:
+    """Execution options for a loop run."""
+
+    max_iterations: int
+    context: str = ""
+    on_progress: ProgressCallback = _noop
+
+
+# ---------------------------------------------------------------------------
 # Strategy protocol
 # ---------------------------------------------------------------------------
 
@@ -109,9 +123,7 @@ class LoopStrategy(Protocol):
         self,
         work: WorkSpec,
         vcs: VCSBackend,
-        max_iterations: int,
-        context: str,
-        on_progress: ProgressCallback,
+        options: LoopOptions,
     ) -> LoopResult:
         """Run the strategy's loop body and return the outcome."""
         ...
@@ -126,9 +138,7 @@ def loop_until_done(
     work: WorkSpec,
     strategy: LoopStrategy,
     vcs: VCSBackend,
-    max_iterations: int,
-    context: str = "",
-    on_progress: ProgressCallback = _noop,
+    options: LoopOptions,
 ) -> LoopResult:
     """Run a loop strategy to completion.
 
@@ -136,4 +146,4 @@ def loop_until_done(
     the loop body; this function provides the uniform call site and a seam
     for future cross-cutting concerns (timing, metrics, error handling).
     """
-    return strategy.execute(work, vcs, max_iterations, context, on_progress)
+    return strategy.execute(work, vcs, options)

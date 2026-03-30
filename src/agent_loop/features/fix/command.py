@@ -7,6 +7,7 @@ from agent_loop.domain.loop.engine import (
     AddressingFeedback,
     EngineEvent,
     Implementing,
+    LoopOptions,
     NoChanges,
     ReviewApproved,
     ReviewRejected,
@@ -95,9 +96,11 @@ def fix_single_issue(
             work=work,
             strategy=strategy,
             vcs=ctx.vcs,
-            max_iterations=max_iterations,
-            context=ctx.config.context,
-            on_progress=_log_engine_progress,
+            options=LoopOptions(
+                max_iterations=max_iterations,
+                context=ctx.config.context,
+                on_progress=_log_engine_progress,
+            ),
         )
 
         if not result.has_changes:

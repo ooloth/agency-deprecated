@@ -5,14 +5,14 @@ import sys
 import textwrap
 from pathlib import Path
 
-from agent_loop.domain.config import resolve_planning_model
+from agent_loop.domain.config import Config, resolve_planning_model
 from agent_loop.domain.context import AppContext
 from agent_loop.domain.errors import AgentLoopError
 from agent_loop.features.analyze.command import cmd_analyze
 from agent_loop.features.fix.command import cmd_fix
 from agent_loop.features.plan.command import cmd_plan
 from agent_loop.features.ralph.command import cmd_ralph
-from agent_loop.features.watch.command import cmd_watch
+from agent_loop.features.watch.command import WatchAgents, cmd_watch
 from agent_loop.io.adapters.claude_cli import EDIT_TOOLS, READ_ONLY_TOOLS, ClaudeCliBackend
 from agent_loop.io.adapters.git import GitBackend
 from agent_loop.io.adapters.github import GitHubTracker
@@ -22,8 +22,8 @@ from agent_loop.io.observability.logging import configure_logging, log
 EFFORT_HELP = "Agent effort level (default: from config or 'high')"
 
 
-def main() -> None:
-    """Parse CLI arguments and dispatch to the requested feature command."""
+def _build_parser() -> argparse.ArgumentParser:
+    """Build the CLI argument parser."""
     parser = argparse.ArgumentParser(
         description="agent-loop: analyze, fix, and review code with AI agents.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -100,11 +100,99 @@ def main() -> None:
         help="Max issues awaiting review before pausing analysis (default: 3)",
     )
 
+    return parser
+
+
+def _dispatch(args: argparse.Namespace, ctx: AppContext, config: Config) -> None:
+    """Wire agent backends and dispatch to the requested feature command."""
+    project_dir = ctx.project_dir
+
+    if args.command == "analyze":
+        agent = ClaudeCliBackend(
+            project_dir,
+            allowed_tools=READ_ONLY_TOOLS,
+            model=config.analysis_agent_model,
+            effort=args.effort or config.analysis_agent_effort,
+        )
+        cmd_analyze(ctx, agent)
+
+    elif args.command == "fix":
+        edit_agent = ClaudeCliBackend(
+            project_dir,
+            allowed_tools=EDIT_TOOLS,
+            model=config.coding_agent_model,
+            effort=args.effort or config.coding_agent_effort,
+        )
+        review_agent = ClaudeCliBackend(
+            project_dir,
+            allowed_tools=READ_ONLY_TOOLS,
+            model=config.review_agent_model,
+            effort=args.review_effort or config.review_agent_effort,
+        )
+        cmd_fix(ctx, edit_agent, review_agent, issue_number=args.issue)
+
+    elif args.command == "plan":
+        resolved_model = resolve_planning_model(config.planning_agent_model, args.model)
+        agent = ClaudeCliBackend(
+            project_dir,
+            model=resolved_model,
+            effort=args.effort or config.planning_agent_effort,
+        )
+        cmd_plan(ctx, agent, idea=args.idea)
+
+    elif args.command == "ralph":
+        agent = ClaudeCliBackend(
+            project_dir,
+            allowed_tools=EDIT_TOOLS,
+            model=config.coding_agent_model,
+            effort=args.effort or config.coding_agent_effort,
+        )
+        plan_or_file = args.plan or args.file
+        cmd_ralph(
+            ctx,
+            agent,
+            prompt=args.prompt,
+            file=plan_or_file,
+            max_iterations=args.max_iterations,
+        )
+
+    elif args.command == "watch":
+        agents = WatchAgents(
+            analysis=ClaudeCliBackend(
+                project_dir,
+                allowed_tools=READ_ONLY_TOOLS,
+                model=config.analysis_agent_model,
+                effort=config.analysis_agent_effort,
+            ),
+            coding=ClaudeCliBackend(
+                project_dir,
+                allowed_tools=EDIT_TOOLS,
+                model=config.coding_agent_model,
+                effort=config.coding_agent_effort,
+            ),
+            review=ClaudeCliBackend(
+                project_dir,
+                allowed_tools=READ_ONLY_TOOLS,
+                model=config.review_agent_model,
+                effort=config.review_agent_effort,
+            ),
+        )
+        cmd_watch(
+            ctx,
+            agents,
+            interval=args.interval,
+            max_open_issues=args.max_open_issues,
+        )
+
+
+def main() -> None:
+    """Parse CLI arguments and dispatch to the requested feature command."""
+    parser = _build_parser()
     args = parser.parse_args()
     configure_logging()
+
     project_dir = args.project_dir.resolve()
     config = load_config(project_dir)
-
     ctx = AppContext(
         project_dir=project_dir,
         config=config,
@@ -113,83 +201,7 @@ def main() -> None:
     )
 
     try:
-        if args.command == "analyze":
-            agent = ClaudeCliBackend(
-                project_dir,
-                allowed_tools=READ_ONLY_TOOLS,
-                model=config.analysis_agent_model,
-                effort=args.effort or config.analysis_agent_effort,
-            )
-            cmd_analyze(ctx, agent)
-
-        elif args.command == "fix":
-            edit_agent = ClaudeCliBackend(
-                project_dir,
-                allowed_tools=EDIT_TOOLS,
-                model=config.coding_agent_model,
-                effort=args.effort or config.coding_agent_effort,
-            )
-            review_agent = ClaudeCliBackend(
-                project_dir,
-                allowed_tools=READ_ONLY_TOOLS,
-                model=config.review_agent_model,
-                effort=args.review_effort or config.review_agent_effort,
-            )
-            cmd_fix(ctx, edit_agent, review_agent, issue_number=args.issue)
-
-        elif args.command == "plan":
-            resolved_model = resolve_planning_model(config.planning_agent_model, args.model)
-            agent = ClaudeCliBackend(
-                project_dir,
-                model=resolved_model,
-                effort=args.effort or config.planning_agent_effort,
-            )
-            cmd_plan(ctx, agent, idea=args.idea)
-
-        elif args.command == "ralph":
-            agent = ClaudeCliBackend(
-                project_dir,
-                allowed_tools=EDIT_TOOLS,
-                model=config.coding_agent_model,
-                effort=args.effort or config.coding_agent_effort,
-            )
-            plan_or_file = args.plan or args.file
-            cmd_ralph(
-                ctx,
-                agent,
-                prompt=args.prompt,
-                file=plan_or_file,
-                max_iterations=args.max_iterations,
-            )
-
-        elif args.command == "watch":
-            analysis_agent = ClaudeCliBackend(
-                project_dir,
-                allowed_tools=READ_ONLY_TOOLS,
-                model=config.analysis_agent_model,
-                effort=config.analysis_agent_effort,
-            )
-            coding_agent = ClaudeCliBackend(
-                project_dir,
-                allowed_tools=EDIT_TOOLS,
-                model=config.coding_agent_model,
-                effort=config.coding_agent_effort,
-            )
-            review_agent = ClaudeCliBackend(
-                project_dir,
-                allowed_tools=READ_ONLY_TOOLS,
-                model=config.review_agent_model,
-                effort=config.review_agent_effort,
-            )
-            cmd_watch(
-                ctx,
-                analysis_agent,
-                coding_agent,
-                review_agent,
-                interval=args.interval,
-                max_open_issues=args.max_open_issues,
-            )
-
+        _dispatch(args, ctx, config)
     except AgentLoopError as exc:
         # Clean user-facing message — no traceback. TRY400 wants logging.exception()
         # here but that would dump a stack trace for routine operational errors.

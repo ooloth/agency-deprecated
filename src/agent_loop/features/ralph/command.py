@@ -8,6 +8,7 @@ from agent_loop.domain.context import AppContext
 from agent_loop.domain.errors import AgentLoopError
 from agent_loop.domain.loop.engine import (
     EngineEvent,
+    LoopOptions,
     StepCompleted,
     StepStarted,
     loop_until_done,
@@ -84,9 +85,11 @@ def cmd_ralph(
             work=work,
             strategy=strategy,
             vcs=ctx.vcs,
-            max_iterations=max_iterations,
-            context=ctx.config.context,
-            on_progress=_log_ralph_progress,
+            options=LoopOptions(
+                max_iterations=max_iterations,
+                context=ctx.config.context,
+                on_progress=_log_ralph_progress,
+            ),
         )
         elapsed = int(time.monotonic() - t0)
 

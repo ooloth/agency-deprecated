@@ -6,6 +6,7 @@ from agent_loop.domain.loop.engine import (
     AddressingFeedback,
     EngineEvent,
     Implementing,
+    LoopOptions,
     NoChanges,
     ReviewApproved,
     loop_until_done,
@@ -66,7 +67,7 @@ def _make_task(
     diffs: list[str],
     max_iterations: int = 5,
     context: str = "",
-) -> tuple[AntagonisticStrategy, WorkSpec, StubVCS, int, str, list[EngineEvent]]:
+) -> tuple[AntagonisticStrategy, WorkSpec, StubVCS, LoopOptions, list[EngineEvent]]:
     events: list[EngineEvent] = []
     strategy = AntagonisticStrategy(
         implement_agent=StubAgent(implement_responses),
@@ -76,18 +77,19 @@ def _make_task(
     )
     work = WorkSpec(title="Test issue", body="Fix the thing.")
     vcs = StubVCS(diffs)
-    return strategy, work, vcs, max_iterations, context, events
+    options = LoopOptions(max_iterations=max_iterations, context=context, on_progress=events.append)
+    return strategy, work, vcs, options, events
 
 
 class TestImplementAndReview:
     def test_approved_first_try(self) -> None:
-        strategy, work, vcs, max_iter, context, events = _make_task(
+        strategy, work, vcs, options, events = _make_task(
             implement_responses=["fixed it"],
             review_responses=["**Verdict**: LGTM"],
             # diff_staged called twice: once in the review loop, once for has_changes
             diffs=["diff content", "diff content"],
         )
-        result = loop_until_done(work, strategy, vcs, max_iter, context, events.append)
+        result = loop_until_done(work, strategy, vcs, options)
 
         assert result.converged is True
         assert result.has_changes is True
@@ -98,13 +100,13 @@ class TestImplementAndReview:
         assert any(isinstance(e, ReviewApproved) for e in events)
 
     def test_no_changes_after_implementation(self) -> None:
-        strategy, work, vcs, max_iter, context, events = _make_task(
+        strategy, work, vcs, options, events = _make_task(
             implement_responses=["nothing to do"],
             review_responses=[],
             # Empty diff after staging → no changes
             diffs=["", ""],
         )
-        result = loop_until_done(work, strategy, vcs, max_iter, context, events.append)
+        result = loop_until_done(work, strategy, vcs, options)
 
         assert result.converged is False
         assert result.has_changes is False
@@ -112,7 +114,7 @@ class TestImplementAndReview:
         assert NoChanges() in events
 
     def test_feedback_addressed_then_approved(self) -> None:
-        strategy, work, vcs, max_iter, context, events = _make_task(
+        strategy, work, vcs, options, events = _make_task(
             implement_responses=["first attempt", "addressed feedback"],
             review_responses=[
                 "**Verdict**: CONCERNS\n\n#### 🔧 Required Changes\n- Fix the edge case",
@@ -121,7 +123,7 @@ class TestImplementAndReview:
             # diff after impl, diff after review1, diff after address, diff after review2, final
             diffs=["diff1", "diff2", "diff3", "diff3"],
         )
-        result = loop_until_done(work, strategy, vcs, max_iter, context, events.append)
+        result = loop_until_done(work, strategy, vcs, options)
 
         assert result.converged is True
         assert len(strategy.review_log) == 2
@@ -130,7 +132,7 @@ class TestImplementAndReview:
         assert AddressingFeedback() in events
 
     def test_max_iterations_exhausted(self) -> None:
-        strategy, work, vcs, max_iter, context, events = _make_task(
+        strategy, work, vcs, options, _events = _make_task(
             implement_responses=["attempt1", "attempt2"],
             review_responses=[
                 "**Verdict**: CONCERNS\n\nStill wrong.",
@@ -139,20 +141,20 @@ class TestImplementAndReview:
             diffs=["diff", "diff", "diff", "diff"],
             max_iterations=2,
         )
-        result = loop_until_done(work, strategy, vcs, max_iter, context, events.append)
+        result = loop_until_done(work, strategy, vcs, options)
 
         assert result.converged is False
         assert result.has_changes is True
         assert len(strategy.review_log) == 2
 
     def test_context_prepended_to_prompts(self) -> None:
-        strategy, work, vcs, max_iter, context, events = _make_task(
+        strategy, work, vcs, options, _events = _make_task(
             implement_responses=["done"],
             review_responses=["**Verdict**: LGTM"],
             diffs=["diff", "diff"],
             context="This is a Python project.",
         )
-        loop_until_done(work, strategy, vcs, max_iter, context, events.append)
+        loop_until_done(work, strategy, vcs, options)
 
         impl_agent = strategy._implement_agent
         assert isinstance(impl_agent, StubAgent)
