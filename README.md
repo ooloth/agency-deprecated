@@ -19,9 +19,16 @@ Agency is a meta-harness that runs other AI coding agents through automated mult
 
 ## Architecture
 
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the layered architecture, domain
-types, and feature pipeline overview. Protocol contracts and behavioral
-invariants live as docstrings adjacent to the code they describe.
+```mermaid
+graph TD
+    CLI["CLI / Entrypoints"]
+    CLI --> Pipelines["Feature Pipelines — analyze · fix · plan · ralph · watch"]
+    Pipelines --> Engine["Domain Engine — loop_until_done()"]
+    Pipelines --> Ports["Ports / Protocols — AgentBackend · VCSBackend · IssueTracker"]
+    Ports --> Adapters["Adapters — ClaudeCliBackend · GitBackend · GitHubTracker"]
+```
+
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the domain engine, feature pipelines, and domain types in detail.
 
 ## Configuration
 
