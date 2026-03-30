@@ -1,4 +1,13 @@
-"""Ralph command — iterative fresh-eyes refinement toward a goal."""
+"""Ralph command — iterative fresh-eyes refinement toward a goal.
+
+Accepts work from --prompt, --file, or --plan (mutually exclusive). The --plan
+flag is functionally identical to --file — the distinction is semantic (plans
+are structured artifacts from a planning session; files are freeform).
+
+Uses RalphStrategy, which commits per iteration for crash safety. The pipeline
+handles branch lifecycle and PR creation. See RalphStrategy for the iteration
+and scratchpad mechanics.
+"""
 
 import re
 import time
@@ -51,7 +60,16 @@ def cmd_ralph(
     prompt: str | None = None,
     file: Path | None = None,
 ) -> None:
-    """Run the Ralph loop: iterative fresh-eyes refinement toward a goal."""
+    """Run the Ralph loop: iterative fresh-eyes refinement toward a goal.
+
+    Branch lifecycle:
+    - Rejects uncommitted changes upfront (raises AgentLoopError).
+    - Creates ralph/<slugified-title> branch from the default branch.
+    - Opens a draft PR on success. If the agent did not signal completion
+      (##DONE##), posts a warning comment on the PR.
+    - Always returns to the default branch on exit.
+    - Deletes the ralph branch if nothing was pushed (early return or exception).
+    """
     if ctx.vcs.has_uncommitted_changes():
         msg = "Working tree has uncommitted changes. Commit or stash them before running ralph."
         raise AgentLoopError(msg)
