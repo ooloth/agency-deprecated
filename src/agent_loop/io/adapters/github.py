@@ -2,6 +2,7 @@
 
 import json
 from enum import StrEnum
+from pathlib import Path
 
 from agent_loop.domain.models.issues import FoundIssue, Issue
 from agent_loop.io.errors import SubprocessError
@@ -45,14 +46,6 @@ _LABEL_DESCRIPTIONS = {
 }
 
 
-def _gh(*args: str) -> str:
-    return run(["gh", *args])
-
-
-def _ensure_label(label: _Label) -> None:
-    _gh("label", "create", label.value, "--force", "--description", _LABEL_DESCRIPTIONS[label])
-
-
 def _parse_issue(data: dict) -> Issue:
     return Issue(
         number=data["number"],
@@ -65,28 +58,40 @@ def _parse_issue(data: dict) -> Issue:
 class GitHubTracker:
     """IssueTracker backed by the GitHub CLI (gh)."""
 
+    def __init__(self, project_dir: Path) -> None:
+        """Bind to the given project directory for all gh operations."""
+        self._project_dir = project_dir
+
+    def _gh(self, *args: str) -> str:
+        return run(["gh", *args], cwd=self._project_dir)
+
+    def _ensure_label(self, label: _Label) -> None:
+        self._gh(
+            "label", "create", label.value, "--force", "--description", _LABEL_DESCRIPTIONS[label]
+        )
+
     # --- analyze pipeline ---
 
     def list_open_titles(self) -> set[str]:
         """Return titles of all open issues."""
-        raw = _gh("issue", "list", "--state", "open", "--json", "title", "--limit", "2000")
+        raw = self._gh("issue", "list", "--state", "open", "--json", "title", "--limit", "2000")
         return {i["title"] for i in json.loads(raw)}
 
     def create_issue(self, found: FoundIssue) -> None:
         """File a new issue with agent-reported and needs-human-review labels."""
-        _ensure_label(_Label.AGENT_REPORTED)
-        _ensure_label(_Label.NEEDS_HUMAN_REVIEW)
+        self._ensure_label(_Label.AGENT_REPORTED)
+        self._ensure_label(_Label.NEEDS_HUMAN_REVIEW)
         for label in found.labels:
-            _gh("label", "create", label, "--force", "--description", "")
+            self._gh("label", "create", label, "--force", "--description", "")
         all_labels = [_Label.AGENT_REPORTED, _Label.NEEDS_HUMAN_REVIEW, *found.labels]
         label_args = [arg for lbl in all_labels for arg in ("--label", str(lbl))]
-        _gh("issue", "create", "--title", found.title, "--body", found.body, *label_args)
+        self._gh("issue", "create", "--title", found.title, "--body", found.body, *label_args)
 
     # --- fix pipeline ---
 
     def list_ready_issues(self) -> list[Issue]:
         """Return issues labeled ready-to-fix that are not claimed."""
-        raw = _gh(
+        raw = self._gh(
             "issue",
             "list",
             "--label",
@@ -102,7 +107,7 @@ class GitHubTracker:
 
     def list_awaiting_review(self) -> list[Issue]:
         """Return issues awaiting human review."""
-        raw = _gh(
+        raw = self._gh(
             "issue",
             "list",
             "--label",
@@ -117,7 +122,7 @@ class GitHubTracker:
     def get_issue(self, number: int) -> Issue | None:
         """Fetch a single issue by number, or None if not found."""
         try:
-            raw = _gh("issue", "view", str(number), "--json", "number,title,body,labels")
+            raw = self._gh("issue", "view", str(number), "--json", "number,title,body,labels")
         except SubprocessError as exc:
             log.warning("Failed to fetch issue #%d: %s", number, exc)
             return None
@@ -133,33 +138,35 @@ class GitHubTracker:
 
     def claim_issue(self, number: int) -> None:
         """Add the in-progress label to prevent concurrent attempts."""
-        _ensure_label(_Label.AGENT_FIX_IN_PROGRESS)
-        _gh("issue", "edit", str(number), "--add-label", _Label.AGENT_FIX_IN_PROGRESS)
+        self._ensure_label(_Label.AGENT_FIX_IN_PROGRESS)
+        self._gh("issue", "edit", str(number), "--add-label", _Label.AGENT_FIX_IN_PROGRESS)
 
     def release_issue(self, number: int) -> None:
         """Remove the in-progress label on cleanup."""
-        _gh("issue", "edit", str(number), "--remove-label", _Label.AGENT_FIX_IN_PROGRESS)
+        self._gh("issue", "edit", str(number), "--remove-label", _Label.AGENT_FIX_IN_PROGRESS)
 
     def remove_ready_label(self, number: int) -> None:
         """Remove the ready-to-fix label when no changes were made."""
-        _gh("issue", "edit", str(number), "--remove-label", _Label.READY_TO_FIX)
+        self._gh("issue", "edit", str(number), "--remove-label", _Label.READY_TO_FIX)
 
     def comment_on_issue(self, number: int, body: str) -> None:
         """Post a comment on an issue."""
-        _gh("issue", "comment", str(number), "--body", body)
+        self._gh("issue", "comment", str(number), "--body", body)
 
     def get_default_branch(self) -> str:
         """Return the repo's default branch name."""
-        return _gh("repo", "view", "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name")
+        return self._gh(
+            "repo", "view", "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name"
+        )
 
     def open_pr(self, title: str, body: str, head: str, *, draft: bool = False) -> str:
         """Open a pull request and return the branch name as a usable pr_ref."""
         cmd = ["pr", "create", "--title", title, "--body", body, "--head", head]
         if draft:
             cmd.append("--draft")
-        _gh(*cmd)
+        self._gh(*cmd)
         return head
 
     def comment_on_pr(self, pr_ref: str, body: str) -> None:
         """Post a comment on an open pull request."""
-        _gh("pr", "comment", pr_ref, "--body", body)
+        self._gh("pr", "comment", pr_ref, "--body", body)

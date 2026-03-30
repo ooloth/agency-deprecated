@@ -222,7 +222,7 @@ def main() -> None:
     ctx = AppContext(
         project_dir=project_dir,
         config=config,
-        tracker=GitHubTracker(),
+        tracker=GitHubTracker(project_dir),
         vcs=GitBackend(project_dir),
     )
 
