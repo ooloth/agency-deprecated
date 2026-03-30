@@ -1,7 +1,5 @@
 """Tests for the antagonistic loop strategy via loop_until_done."""
 
-from collections.abc import Iterator
-
 from agent_loop.domain.loop.engine import (
     AddressedFeedback,
     EngineEvent,
@@ -13,52 +11,7 @@ from agent_loop.domain.loop.engine import (
 )
 from agent_loop.domain.loop.strategies import AntagonisticStrategy
 from agent_loop.domain.loop.work import WorkSpec
-
-
-class StubAgent:
-    """AgentBackend stub that returns preset responses in order."""
-
-    def __init__(self, responses: list[str]) -> None:
-        self._responses: Iterator[str] = iter(responses)
-        self.prompts: list[str] = []
-
-    def run(self, prompt: str) -> str:
-        self.prompts.append(prompt)
-        return next(self._responses)
-
-
-class StubVCS:
-    """VCSBackend stub with controllable staged diff."""
-
-    def __init__(self, diffs: list[str]) -> None:
-        self._diffs: Iterator[str] = iter(diffs)
-
-    def has_uncommitted_changes(self) -> bool:
-        return False
-
-    def stage_all(self) -> None:
-        pass
-
-    def diff_staged(self) -> str:
-        return next(self._diffs)
-
-    def checkout(self, branch: str) -> None:
-        pass
-
-    def pull(self, branch: str) -> None:
-        pass
-
-    def checkout_new_branch(self, branch: str) -> None:
-        pass
-
-    def commit(self, message: str) -> None:
-        pass
-
-    def push(self, branch: str) -> None:
-        pass
-
-    def delete_branch(self, branch: str) -> None:
-        pass
+from agent_loop.testing.stubs import StubAgent, StubVCS
 
 
 def _make_task(
@@ -76,7 +29,7 @@ def _make_task(
         review_prompt="Review this diff.",
     )
     work = WorkSpec(title="Test issue", body="Fix the thing.")
-    vcs = StubVCS(diffs)
+    vcs = StubVCS(diffs=diffs)
     options = LoopOptions(max_iterations=max_iterations, context=context, on_progress=events.append)
     return strategy, work, vcs, options, events
 

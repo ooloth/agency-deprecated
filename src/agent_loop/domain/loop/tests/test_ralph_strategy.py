@@ -1,7 +1,5 @@
 """Tests for RalphStrategy via loop_until_done."""
 
-from collections.abc import Iterator
-
 from agent_loop.domain.loop.engine import (
     EngineEvent,
     LoopOptions,
@@ -11,54 +9,7 @@ from agent_loop.domain.loop.engine import (
 )
 from agent_loop.domain.loop.strategies import RalphStrategy
 from agent_loop.domain.loop.work import WorkSpec
-
-
-class StubAgent:
-    """AgentBackend stub that returns preset responses in order."""
-
-    def __init__(self, responses: list[str]) -> None:
-        self._responses: Iterator[str] = iter(responses)
-        self.prompts: list[str] = []
-
-    def run(self, prompt: str) -> str:
-        self.prompts.append(prompt)
-        return next(self._responses)
-
-
-class StubVCS:
-    """VCSBackend stub that tracks staged diffs and commits."""
-
-    def __init__(self, diffs: list[str]) -> None:
-        self._diffs: Iterator[str] = iter(diffs)
-        self.commits: list[str] = []
-
-    def has_uncommitted_changes(self) -> bool:
-        return False
-
-    def stage_all(self) -> None:
-        pass
-
-    def diff_staged(self) -> str:
-        return next(self._diffs)
-
-    def commit(self, message: str) -> None:
-        self.commits.append(message)
-
-    def checkout(self, branch: str) -> None:
-        pass
-
-    def pull(self, branch: str) -> None:
-        pass
-
-    def checkout_new_branch(self, branch: str) -> None:
-        pass
-
-    def push(self, branch: str) -> None:
-        pass
-
-    def delete_branch(self, branch: str) -> None:
-        pass
-
+from agent_loop.testing.stubs import StubAgent, StubVCS
 
 TEMPLATE = "Goal:\n{goal}"
 
@@ -69,7 +20,7 @@ class TestRalphStrategy:
             agent=StubAgent(["step 1 done", "all done\n##DONE##"]),
             prompt_template=TEMPLATE,
         )
-        vcs = StubVCS(["diff1", "diff2"])
+        vcs = StubVCS(diffs=["diff1", "diff2"])
         work = WorkSpec(title="test", body="add type hints")
         events: list[EngineEvent] = []
 
@@ -88,7 +39,7 @@ class TestRalphStrategy:
             agent=StubAgent(["progress 1", "progress 2", "progress 3"]),
             prompt_template=TEMPLATE,
         )
-        vcs = StubVCS(["diff", "diff", "diff"])
+        vcs = StubVCS(diffs=["diff", "diff", "diff"])
         work = WorkSpec(title="test", body="big task")
         events: list[EngineEvent] = []
 
@@ -106,7 +57,7 @@ class TestRalphStrategy:
             prompt_template=TEMPLATE,
         )
         # First iteration: no diff. Second: has diff.
-        vcs = StubVCS(["", "diff2"])
+        vcs = StubVCS(diffs=["", "diff2"])
         work = WorkSpec(title="test", body="check things")
         events: list[EngineEvent] = []
 
@@ -121,7 +72,7 @@ class TestRalphStrategy:
     def test_context_prepended_to_prompt(self) -> None:
         agent = StubAgent(["done\n##DONE##"])
         strategy = RalphStrategy(agent=agent, prompt_template=TEMPLATE)
-        vcs = StubVCS(["diff"])
+        vcs = StubVCS(diffs=["diff"])
         work = WorkSpec(title="test", body="the goal")
 
         loop_until_done(
@@ -136,7 +87,7 @@ class TestRalphStrategy:
             agent=StubAgent(["working...", "done\n##DONE##"]),
             prompt_template=TEMPLATE,
         )
-        vcs = StubVCS(["diff", "diff"])
+        vcs = StubVCS(diffs=["diff", "diff"])
         work = WorkSpec(title="test", body="goal")
         events: list[EngineEvent] = []
 
@@ -156,7 +107,7 @@ class TestRalphStrategy:
     def test_prompt_template_receives_goal(self) -> None:
         agent = StubAgent(["##DONE##"])
         strategy = RalphStrategy(agent=agent, prompt_template="Do this: {goal}")
-        vcs = StubVCS(["diff"])
+        vcs = StubVCS(diffs=["diff"])
         work = WorkSpec(title="test", body="add tests to foo.py")
 
         loop_until_done(work, strategy, vcs, LoopOptions(max_iterations=5))
@@ -171,7 +122,7 @@ class TestRalphStrategy:
             ]
         )
         strategy = RalphStrategy(agent=agent, prompt_template=TEMPLATE)
-        vcs = StubVCS(["diff", "diff"])
+        vcs = StubVCS(diffs=["diff", "diff"])
         work = WorkSpec(title="test", body="the goal")
 
         loop_until_done(work, strategy, vcs, LoopOptions(max_iterations=5))
@@ -192,7 +143,7 @@ class TestRalphStrategy:
             ]
         )
         strategy = RalphStrategy(agent=agent, prompt_template=TEMPLATE)
-        vcs = StubVCS(["diff", "diff"])
+        vcs = StubVCS(diffs=["diff", "diff"])
         work = WorkSpec(title="test", body="the goal")
 
         result = loop_until_done(work, strategy, vcs, LoopOptions(max_iterations=5))
