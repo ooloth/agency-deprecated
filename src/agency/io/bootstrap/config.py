@@ -1,4 +1,4 @@
-"""Load and merge .agent-loop.yml configuration."""
+"""Load and merge .agency/config.yml configuration."""
 
 import dataclasses
 from pathlib import Path
@@ -12,16 +12,16 @@ from agency.io.observability.logging import log
 
 
 def load_config(project_dir: Path) -> Config:
-    """Load config from .agent-loop.yml in the project directory, merged with defaults.
+    """Load config from .agency/config.yml in the project directory, merged with defaults.
 
     Only keys that exist on Config and have non-None values in the YAML file are
     applied. Unknown keys are silently ignored. Absent or null keys fall back to
     Config's built-in defaults. Type mismatches raise AgentLoopError.
     """
-    config_file = project_dir / ".agent-loop.yml"
+    config_file = project_dir / ".agency" / "config.yml"
     if not config_file.exists():
         config = Config()
-        log.debug("Config: no .agent-loop.yml found, using defaults: %s", config)
+        log.debug("Config: no .agency/config.yml found, using defaults: %s", config)
         return config
 
     with config_file.open() as f:
@@ -53,7 +53,7 @@ def _validate_types(overrides: dict[str, object]) -> None:
 
     if errors:
         detail = "\n".join(errors)
-        msg = f"Invalid config types in .agent-loop.yml:\n{detail}"
+        msg = f"Invalid config types in .agency/config.yml:\n{detail}"
         raise AgentLoopError(msg)
 
 
