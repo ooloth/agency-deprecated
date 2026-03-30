@@ -8,8 +8,8 @@ import time
 from typing import TypedDict
 
 from agent_loop.domain.loop.engine import (
-    AddressingFeedback,
-    Implementing,
+    AddressedFeedback,
+    Implemented,
     LoopOptions,
     LoopResult,
     NoChanges,
@@ -123,8 +123,9 @@ class AntagonisticStrategy:
         if context:
             fix_prompt = f"Project context:\n{context}\n\n{fix_prompt}"
 
-        notify(Implementing())
+        t0 = time.monotonic()
         self.initial_response = self._implement_agent.run(fix_prompt)
+        notify(Implemented(elapsed_seconds=int(time.monotonic() - t0)))
         vcs.stage_all()
 
         # Review loop
@@ -192,8 +193,9 @@ class AntagonisticStrategy:
                 f"Please address the concerns. Prefer the simplest solution — if a problem\n"
                 f"can be eliminated rather than handled, do that instead."
             )
-            notify(AddressingFeedback())
+            t0 = time.monotonic()
             self._implement_agent.run(fix_feedback_prompt)
+            notify(AddressedFeedback(elapsed_seconds=int(time.monotonic() - t0)))
             vcs.stage_all()
 
         has_changes = bool(vcs.diff_staged())

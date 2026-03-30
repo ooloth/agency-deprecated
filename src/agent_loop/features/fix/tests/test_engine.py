@@ -3,9 +3,9 @@
 from collections.abc import Iterator
 
 from agent_loop.domain.loop.engine import (
-    AddressingFeedback,
+    AddressedFeedback,
     EngineEvent,
-    Implementing,
+    Implemented,
     LoopOptions,
     NoChanges,
     ReviewApproved,
@@ -96,7 +96,7 @@ class TestImplementAndReview:
         assert strategy.initial_response == "fixed it"
         assert len(strategy.review_log) == 1
         assert strategy.review_log[0]["approved"] is True
-        assert Implementing() in events
+        assert any(isinstance(e, Implemented) for e in events)
         assert any(isinstance(e, ReviewApproved) for e in events)
 
     def test_no_changes_after_implementation(self) -> None:
@@ -129,7 +129,7 @@ class TestImplementAndReview:
         assert len(strategy.review_log) == 2
         assert strategy.review_log[0]["approved"] is False
         assert strategy.review_log[1]["approved"] is True
-        assert AddressingFeedback() in events
+        assert any(isinstance(e, AddressedFeedback) for e in events)
 
     def test_max_iterations_exhausted(self) -> None:
         strategy, work, vcs, options, _events = _make_task(

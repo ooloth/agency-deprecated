@@ -6,9 +6,9 @@ import time
 from agent_loop.domain.context import AppContext
 from agent_loop.domain.errors import AgentLoopError
 from agent_loop.domain.loop.engine import (
-    AddressingFeedback,
+    AddressedFeedback,
     EngineEvent,
-    Implementing,
+    Implemented,
     LoopOptions,
     NoChanges,
     ReviewApproved,
@@ -28,8 +28,8 @@ from agent_loop.io.observability.logging import log, log_detail, log_step
 def _log_engine_progress(event: EngineEvent) -> None:
     """Translate engine progress events into tree-structured log output."""
     match event:
-        case Implementing():
-            log_step("🤖 Implementing fix...")
+        case Implemented(elapsed_seconds=s):
+            log_step(f"🤖 Implemented fix ({s}s)")
         case NoChanges():
             log_step("⚠️  No changes were made", last=True)
         case ReviewApproved(iteration=i, max_iterations=m, elapsed_seconds=s):
@@ -38,8 +38,8 @@ def _log_engine_progress(event: EngineEvent) -> None:
             is_last = i >= m
             log_step(f"🔎 Review {i}/{m} — 🔄 Changes requested ({s}s)", last=is_last)
             log_detail(summary, last_step=is_last)
-        case AddressingFeedback():
-            log_step("🤖 Addressing feedback...")
+        case AddressedFeedback(elapsed_seconds=s):
+            log_step(f"🤖 Addressed feedback ({s}s)")
 
 
 def _slugify(text: str, max_len: int = 50) -> str:

@@ -15,8 +15,10 @@ from agent_loop.domain.ports.vcs_backend import VCSBackend
 
 
 @dataclass(frozen=True)
-class Implementing:
-    """The implement agent is working on the initial fix."""
+class Implemented:
+    """The implement agent completed the initial fix."""
+
+    elapsed_seconds: int
 
 
 @dataclass(frozen=True)
@@ -44,8 +46,10 @@ class ReviewRejected:
 
 
 @dataclass(frozen=True)
-class AddressingFeedback:
-    """The implement agent is addressing review feedback."""
+class AddressedFeedback:
+    """The implement agent addressed review feedback."""
+
+    elapsed_seconds: int
 
 
 @dataclass(frozen=True)
@@ -68,11 +72,11 @@ class StepCompleted:
 
 
 EngineEvent = (
-    Implementing
+    Implemented
     | NoChanges
     | ReviewApproved
     | ReviewRejected
-    | AddressingFeedback
+    | AddressedFeedback
     | StepStarted
     | StepCompleted
 )
