@@ -52,11 +52,15 @@ def cmd_watch(
     log.info("   Press Ctrl+C to stop gracefully.")
     log.info("")
 
+    cycle = 0
     while not stopping:
+        cycle += 1
+        log.info("🔄 Cycle %d", cycle)
+
         try:
             _poll_once(ctx, agents, max_open_issues)
         except AgentLoopError as exc:
-            log.warning("❌ Error during poll: %s", exc)
+            log.warning("❌ Error during cycle %d: %s", cycle, exc)
             log.warning("   Will retry next cycle.")
 
         if stopping:
@@ -70,7 +74,7 @@ def cmd_watch(
                 break
             time.sleep(1)
 
-    log.info("👋 Stopped.")
+    log.info("👋 Stopped after %d cycle(s).", cycle)
 
 
 def _poll_once(
