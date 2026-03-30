@@ -2,7 +2,10 @@
 
 from pathlib import Path
 
+import pytest
+
 from agent_loop.domain.config import Config
+from agent_loop.domain.errors import AgentLoopError
 from agent_loop.io.bootstrap.config import load_config
 
 
@@ -46,3 +49,24 @@ class TestLoadConfig:
         assert config.analyze_prompt == "custom analyze"
         assert config.review_prompt == "custom review"
         assert config.fix_prompt_template is None
+
+    def test_invalid_type_for_int_field(self, tmp_path: Path) -> None:
+        (tmp_path / ".agent-loop.yml").write_text("max_iterations: five\n")
+        with pytest.raises(AgentLoopError, match=r"max_iterations.*expected int.*got str"):
+            load_config(tmp_path)
+
+    def test_invalid_type_for_str_field(self, tmp_path: Path) -> None:
+        (tmp_path / ".agent-loop.yml").write_text("context: 42\n")
+        with pytest.raises(AgentLoopError, match=r"context.*expected str.*got int"):
+            load_config(tmp_path)
+
+    def test_invalid_type_for_optional_str_field(self, tmp_path: Path) -> None:
+        (tmp_path / ".agent-loop.yml").write_text("analyze_prompt: [1, 2, 3]\n")
+        with pytest.raises(AgentLoopError, match=r"analyze_prompt.*expected str.*got list"):
+            load_config(tmp_path)
+
+    def test_multiple_type_errors_reported_together(self, tmp_path: Path) -> None:
+        (tmp_path / ".agent-loop.yml").write_text("max_iterations: five\ncontext: 42\n")
+        with pytest.raises(AgentLoopError, match="max_iterations") as exc_info:
+            load_config(tmp_path)
+        assert "context" in str(exc_info.value)
