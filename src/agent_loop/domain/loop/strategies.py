@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 import textwrap
 import time
@@ -22,6 +23,8 @@ from agent_loop.domain.loop.termination import OutputSignal, ReviewApproval
 from agent_loop.domain.loop.work import WorkSpec
 from agent_loop.domain.ports.agent_backend import AgentBackend
 from agent_loop.domain.ports.vcs_backend import VCSBackend
+
+_log = logging.getLogger("agent_loop")
 
 _SCRATCHPAD_INSTRUCTIONS = textwrap.dedent("""\
 
@@ -152,6 +155,7 @@ class AntagonisticStrategy:
             feedback = self._review_agent.run(review_prompt)
             review_elapsed = int(time.monotonic() - t0)
             approved = self._review_approval.is_met(feedback)
+            _log.debug("Review verdict: %s", "approved" if approved else "rejected")
 
             self.review_log.append(
                 {

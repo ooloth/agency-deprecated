@@ -1,10 +1,13 @@
 """Load and merge .agent-loop.yml configuration."""
 
+import logging
 from pathlib import Path
 
 import yaml
 
 from agent_loop.domain.config import Config
+
+log = logging.getLogger("agent_loop")
 
 
 def load_config(project_dir: Path) -> Config:
@@ -16,7 +19,9 @@ def load_config(project_dir: Path) -> Config:
     """
     config_file = project_dir / ".agent-loop.yml"
     if not config_file.exists():
-        return Config()
+        config = Config()
+        log.debug("Config: no .agent-loop.yml found, using defaults: %s", config)
+        return config
 
     with config_file.open() as f:
         raw = yaml.safe_load(f) or {}
@@ -24,4 +29,6 @@ def load_config(project_dir: Path) -> Config:
     # Keep only keys that Config knows about, and drop nulls
     valid_fields = {f.name for f in Config.__dataclass_fields__.values()}
     overrides = {k: v for k, v in raw.items() if k in valid_fields and v is not None}
-    return Config(**overrides)
+    config = Config(**overrides)
+    log.debug("Config: %s", config)
+    return config

@@ -39,6 +39,7 @@ class BranchSession:
         self._pushed = False
 
     def __enter__(self) -> Self:
+        log.debug("BranchSession: entering %s for issue #%d", self._branch, self._issue.number)
         self._default_branch = self._tracker.get_default_branch()
 
         # Pull before claiming so a network failure doesn't leave the lock stuck.
@@ -55,6 +56,7 @@ class BranchSession:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
+        log.debug("BranchSession: exiting %s, pushed=%s", self._branch, self._pushed)
         try:
             self._vcs.checkout(self._default_branch)
         except Exception:
