@@ -1,6 +1,7 @@
 """CLI entry point — parse args, wire adapters, dispatch to feature commands."""
 
 import argparse
+import logging
 import sys
 import textwrap
 from pathlib import Path
@@ -17,6 +18,7 @@ from agent_loop.io.adapters.claude_cli import EDIT_TOOLS, READ_ONLY_TOOLS, Claud
 from agent_loop.io.adapters.git import GitBackend
 from agent_loop.io.adapters.github import GitHubTracker
 from agent_loop.io.bootstrap.config import load_config
+from agent_loop.io.observability.logging import configure_logging
 
 EFFORT_HELP = "Agent effort level (default: from config or 'high')"
 
@@ -100,6 +102,7 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+    configure_logging()
     project_dir = args.project_dir.resolve()
     config = load_config(project_dir)
 
@@ -189,5 +192,7 @@ def main() -> None:
             )
 
     except AgentLoopError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+        # Clean user-facing message — no traceback. TRY400 wants logging.exception()
+        # here but that would dump a stack trace for routine operational errors.
+        logging.getLogger("agent_loop").error("Error: %s", exc)  # noqa: TRY400
         sys.exit(1)

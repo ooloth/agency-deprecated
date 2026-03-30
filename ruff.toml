@@ -34,20 +34,6 @@ unfixable = []
     "S106",    # hardcoded-password-func-arg – test fixtures pass literal tokens
     "SLF001",  # private-member-access     – white-box testing accesses privates
 ]
-"src/agent_loop/cli.py" = [
-    "T201",    # print                     – CLI entry point prints to stderr
-]
-"src/agent_loop/io/observability/logging.py" = [
-    "T201",    # print                     – logging module's entire job is printing
-]
-"src/agent_loop/io/adapters/claude_cli.py" = [
-    "S603",    # subprocess-without-shell-equals-true – adapter's job is to call subprocesses
-    "PLW1510", # subprocess-run-without-check         – interactive session; check is manual
-]
-"src/agent_loop/io/transports/process.py" = [
-    "S603",    # subprocess-without-shell-equals-true – transport's job is to call subprocesses
-    "PLW1510", # subprocess-run-without-check         – has its own check logic
-]
 
 [lint.pylint]
 max-args = 7

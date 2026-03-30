@@ -1,17 +1,28 @@
 """Timestamped console logging for CLI output."""
 
+import logging
 from datetime import datetime
+
+_logger = logging.getLogger("agent_loop")
+
+
+def configure_logging() -> None:
+    """Set up the root agent_loop logger for console output."""
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    _logger.addHandler(handler)
+    _logger.setLevel(logging.INFO)
 
 
 def log(msg: str, prefix: str = "") -> None:
     """Log a timestamped message."""
     timestamp = datetime.now().astimezone().strftime("%H:%M:%S")
-    print(f"[{timestamp}] {prefix}{msg}")
+    _logger.info("[%s] %s%s", timestamp, prefix, msg)
 
 
 def log_blank() -> None:
-    """Print a blank line to separate log sections."""
-    print()
+    """Log a blank line to separate log sections."""
+    _logger.info("")
 
 
 def log_step(msg: str, *, last: bool = False) -> None:

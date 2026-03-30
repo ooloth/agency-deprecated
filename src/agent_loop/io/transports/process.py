@@ -18,7 +18,7 @@ def run(
     Raises SubprocessError on non-zero exit (when check=True) instead of
     calling sys.exit, so callers higher up can decide how to handle it.
     """
-    result = subprocess.run(cmd, capture_output=capture, text=True, cwd=cwd)
+    result = subprocess.run(cmd, capture_output=capture, text=True, cwd=cwd, check=False)  # noqa: S603
     if check and result.returncode != 0:
         raise SubprocessError(cmd=" ".join(cmd), stderr=result.stderr or "")
     return result.stdout.strip() if capture else ""

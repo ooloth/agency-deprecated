@@ -69,4 +69,4 @@ class ClaudeCliBackend:
         if initial_message:
             cmd.append(initial_message)
 
-        subprocess.run(cmd, cwd=self._project_dir)
+        subprocess.run(cmd, cwd=self._project_dir, check=False)  # noqa: S603
