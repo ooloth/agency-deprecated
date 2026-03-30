@@ -11,7 +11,7 @@ from agent_loop.domain.loop.engine import (
 )
 from agent_loop.domain.loop.strategies import AntagonisticStrategy
 from agent_loop.domain.loop.work import WorkSpec
-from agent_loop.testing.stubs import StubAgent, StubVCS
+from agent_loop.domain.ports.tests.stubs import StubAgent, StubVCS
 
 
 def _make_task(

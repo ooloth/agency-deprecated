@@ -2,8 +2,8 @@
 
 import pytest
 
+from agent_loop.domain.ports.tests.stubs import StubTracker, StubVCS, make_issue
 from agent_loop.features.fix.branch_session import BranchSession
-from agent_loop.testing.stubs import StubTracker, StubVCS, make_issue
 
 
 class TestBranchSessionSuccess:

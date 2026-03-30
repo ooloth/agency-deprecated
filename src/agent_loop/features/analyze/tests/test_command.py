@@ -1,7 +1,8 @@
 """Tests for cmd_analyze — dedup logic and issue creation."""
 
+from agent_loop.domain.ports.tests.stubs import StubAgent, StubTracker
 from agent_loop.features.analyze.command import cmd_analyze
-from agent_loop.testing.stubs import StubAgent, StubTracker, make_ctx
+from agent_loop.features.tests.context import make_ctx
 
 ANALYSIS_WITH_TWO_ISSUES = """```json
 [

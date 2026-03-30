@@ -6,10 +6,7 @@ from here rather than defining their own.
 """
 
 from collections.abc import Iterator
-from pathlib import Path
 
-from agent_loop.domain.config import Config
-from agent_loop.domain.context import AppContext
 from agent_loop.domain.models.issues import FoundIssue, Issue
 
 
@@ -135,22 +132,6 @@ class StubTracker:
 
     def comment_on_pr(self, pr_ref: str, body: str) -> None:
         self.pr_comments.append((pr_ref, body))
-
-
-def make_ctx(
-    *,
-    vcs: StubVCS | None = None,
-    tracker: StubTracker | None = None,
-    config: Config | None = None,
-    project_dir: Path | None = None,
-) -> AppContext:
-    """Build an AppContext wired to stubs."""
-    return AppContext(
-        project_dir=project_dir or Path("/fake"),
-        config=config or Config(),
-        tracker=tracker or StubTracker(),
-        vcs=vcs or StubVCS(),
-    )
 
 
 def make_issue(

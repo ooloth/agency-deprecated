@@ -1,7 +1,8 @@
 """Tests for cmd_fix — issue-based fix pipeline."""
 
+from agent_loop.domain.ports.tests.stubs import StubAgent, StubTracker, StubVCS, make_issue
 from agent_loop.features.fix.command import cmd_fix
-from agent_loop.testing.stubs import StubAgent, StubTracker, StubVCS, make_ctx, make_issue
+from agent_loop.features.tests.context import make_ctx
 
 
 class TestCmdFix:

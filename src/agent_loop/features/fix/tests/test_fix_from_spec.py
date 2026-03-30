@@ -7,8 +7,9 @@ import pytest
 from agent_loop.domain.config import Config
 from agent_loop.domain.errors import AgentLoopError
 from agent_loop.domain.loop.work import from_file, from_prompt
+from agent_loop.domain.ports.tests.stubs import StubAgent, StubTracker, StubVCS
 from agent_loop.features.fix.command import fix_from_spec
-from agent_loop.testing.stubs import StubAgent, StubTracker, StubVCS, make_ctx
+from agent_loop.features.tests.context import make_ctx
 
 
 class TestFixFromSpec:

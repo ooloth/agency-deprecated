@@ -121,8 +121,6 @@ forbidden_modules =
     agent_loop.domain.config
     agent_loop.domain.context
     agent_loop.domain.errors
-ignore_imports =
-    agent_loop.domain.loop.tests.** -> agent_loop.testing.**
 
 # --- stdlib logging banned outside observability ---
 # All logging must go through the shared logger in io.observability.logging.
@@ -149,5 +147,3 @@ source_modules =
     agent_loop.domain.loop
 forbidden_modules =
     agent_loop.domain.context
-ignore_imports =
-    agent_loop.domain.loop.tests.** -> agent_loop.testing.**
