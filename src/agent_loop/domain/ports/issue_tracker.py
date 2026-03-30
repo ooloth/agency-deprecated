@@ -1,4 +1,13 @@
-"""IssueTracker port — the issue-platform interface."""
+"""IssueTracker port — the issue-platform interface.
+
+Abstracts everything the analyze and fix pipelines need from an issue tracker:
+listing, creating, labeling, PR creation, and commenting. The engine
+(loop_until_done) does NOT depend on this protocol — it only depends on
+AgentBackend and VCSBackend. IssueTracker is a pipeline-level concern.
+
+Known adapters:
+- GitHubTracker (io/adapters/github.py) — wraps the gh CLI
+"""
 
 from typing import Protocol
 
@@ -6,7 +15,28 @@ from agent_loop.domain.models.issues import FoundIssue, Issue
 
 
 class IssueTracker(Protocol):
-    """Issue platform operations used by the analyze and fix pipelines."""
+    """Issue platform operations used by the analyze and fix pipelines.
+
+    Contract:
+    - list_ready_issues() excludes issues already claimed (in-progress).
+      Callers do not need to filter.
+    - list_awaiting_review() returns issues pending human triage. Used by the
+      watch loop for backpressure — analysis is skipped when this count meets
+      the cap.
+    - get_issue() returns None rather than raising for a missing issue, so the
+      --issue N code path can emit a clean user-facing message.
+    - is_ready_to_fix() / is_claimed() check workflow state on an
+      already-fetched Issue. Used as guards in the fix pipeline before entering
+      BranchSession.
+    - claim_issue() / release_issue() are the locking pair. release_issue()
+      must always be called on failure (the fix pipeline's cleanup block
+      handles this).
+    - open_pr() returns a string reference (branch name, PR number, or URL —
+      adapter-defined) that can be passed back to comment_on_pr(). Callers
+      treat it as opaque.
+    - create_issue() is responsible for ensuring any required labels/tags exist
+      before creating the issue. Callers do not need a separate setup step.
+    """
 
     # --- analyze pipeline ---
 
