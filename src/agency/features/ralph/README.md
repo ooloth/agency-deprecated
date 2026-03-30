@@ -6,9 +6,9 @@ draft PR when done.
 
 ```bash
 # Execute a plan from a planning session
-agent-loop ralph --plan .plans/add-error-handling.md
+agency ralph --plan .agency/plans/add-error-handling.md
 
 # Work from a file or inline prompt
-agent-loop ralph --file goal.md
-agent-loop ralph --prompt 'add type hints to foo.py' --max-iterations 10
+agency ralph --file goal.md
+agency ralph --prompt 'add type hints to foo.py' --max-iterations 10
 ```

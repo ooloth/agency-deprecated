@@ -1,4 +1,4 @@
-# agent_loop
+# agency
 
 Three packages, each with a distinct role:
 

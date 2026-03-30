@@ -9,7 +9,7 @@ is built around. See `ARCHITECTURE.md` at the repo root for the architectural ra
   no dependencies on other domain modules.
 - **`ports/`** — Port protocols (`AgentBackend`, `VCSBackend`, `IssueTracker`) that feature
   pipelines depend on and adapters implement. Depend on models only.
-- **`config.py`** — `Config`: settings loaded from `.agent-loop.yml`
+- **`config.py`** — `Config`: settings loaded from `.agency/config.yml`
 - **`context.py`** — `AppContext`: the composition root passed to every pipeline command; carries
   all backends so features never import adapters directly. The top of the domain DAG — nothing
   else in domain imports it.

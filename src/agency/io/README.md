@@ -36,6 +36,6 @@ none of them.
 - **`adapters/git.py`** — `GitBackend`: wraps `git` CLI for staging, diffing, and branch operations
 - **`adapters/github.py`** — `GitHubTracker`: wraps `gh` CLI for issues, labels, PRs, and the
   claim/release locking mechanism
-- **`bootstrap/config.py`** — Loads and validates `.agent-loop.yml` into a `Config` instance
+- **`bootstrap/config.py`** — Loads and validates `.agency/config.yml` into a `Config` instance
 - **`observability/logging.py`** — Timestamped, tree-structured console logging helpers
 - **`transports/process.py`** — Thin `subprocess.run()` wrapper used by all adapters

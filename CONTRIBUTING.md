@@ -10,8 +10,8 @@
 
 ```bash
 # Clone and enter the repo
-git clone https://github.com/ooloth/agent-loop.git
-cd agent-loop
+git clone https://github.com/ooloth/agency.git
+cd agency
 
 # Install dependencies
 uv sync --group dev
@@ -23,5 +23,5 @@ uv tool install -e --reinstall .
 prek install
 
 # Verify
-agent-loop --help
+agency --help
 ```

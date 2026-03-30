@@ -81,7 +81,7 @@ See `features/fix/command.py`.
 ### `plan`
 
 Interactive planning session — the agent explores the codebase, discusses
-options with the user, and writes a plan file to `.plans/`. No automated loop.
+options with the user, and writes a plan file to `.agency/plans/`. No automated loop.
 See `features/plan/command.py`.
 
 ### `ralph`
@@ -105,7 +105,7 @@ AppContext:                     -- composition root; passed to every pipeline co
   tracker:      IssueTracker
   vcs:          VCSBackend
 
-Config:                         -- loaded from .agent-loop.yml
+Config:                         -- loaded from .agency/config.yml
   max_iterations:              integer
   context:                     string
   planning_agent_model?:       string

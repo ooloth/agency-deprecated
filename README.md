@@ -4,11 +4,11 @@ A meta-harness that runs AI coding agents through automated multi-step workflows
 
 ## Features
 
-- **[analyze](src/agent_loop/features/analyze/)** — scan a codebase for issues and file them in the tracker
-- **[fix](src/agent_loop/features/fix/)** — pick up tracked issues (or ad-hoc specs), run an implement→review loop, open PRs
-- **[watch](src/agent_loop/features/watch/)** — continuous loop: fix ready issues, analyze when the queue is low, sleep
-- **[plan](src/agent_loop/features/plan/)** — interactive session to explore a codebase and produce a structured plan
-- **[ralph](src/agent_loop/features/ralph/)** — iterative fresh-eyes refinement toward a goal, committing per iteration
+- **[analyze](src/agency/features/analyze/)** — scan a codebase for issues and file them in the tracker
+- **[fix](src/agency/features/fix/)** — pick up tracked issues (or ad-hoc specs), run an implement→review loop, open PRs
+- **[watch](src/agency/features/watch/)** — continuous loop: fix ready issues, analyze when the queue is low, sleep
+- **[plan](src/agency/features/plan/)** — interactive session to explore a codebase and produce a structured plan
+- **[ralph](src/agency/features/ralph/)** — iterative fresh-eyes refinement toward a goal, committing per iteration
 
 ## Architecture
 
@@ -18,8 +18,8 @@ invariants live as docstrings adjacent to the code they describe.
 
 ## Configuration
 
-Drop a `.agent-loop.yml` in your project root to customize behavior. All fields
-are optional — sensible defaults are built in. See the `Config` type in
+Drop a `.agency/config.yml` in your project root to customize behavior. All
+fields are optional — sensible defaults are built in. See the `Config` type in
 [`ARCHITECTURE.md`](ARCHITECTURE.md#domain-types) for the full schema.
 
 ## Inspiration

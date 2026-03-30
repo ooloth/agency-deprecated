@@ -1,5 +1,6 @@
 # See: https://docs.astral.sh/ruff/configuration/
 # See: https://docs.astral.sh/ruff/settings/
+# See: https://docs.astral.sh/ruff/rules/
 
 line-length = 100
 target-version = "py314"
@@ -34,8 +35,8 @@ unfixable = []
     "SLF001",  # private-member-access       – white-box testing accesses privates
 ]
 "**/testing/**" = [
-    "D102",    # missing-docstring-in-public-method – stubs mirror protocol methods
-    "D107",    # missing-docstring-in-__init__      – stub constructors are self-evident
+    "D102", # missing-docstring-in-public-method – stubs mirror protocol methods
+    "D107", # missing-docstring-in-__init__      – stub constructors are self-evident
 ]
 
 [lint.isort]

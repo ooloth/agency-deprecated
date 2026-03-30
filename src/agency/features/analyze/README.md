@@ -3,8 +3,8 @@
 Scan the codebase for issues and file them in the tracker.
 
 ```bash
-agent-loop analyze
-agent-loop --project-dir /path/to/project analyze
+agency analyze
+agency --project-dir /path/to/project analyze
 ```
 
 ## Labels

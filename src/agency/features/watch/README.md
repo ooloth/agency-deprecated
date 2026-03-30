@@ -3,9 +3,9 @@
 Continuous loop: fix ready issues, analyze when the queue is low, sleep.
 
 ```bash
-agent-loop watch
-agent-loop watch --interval 1800          # poll every 30 minutes
-agent-loop watch --max-open-issues 5      # pause analysis when 5+ issues await review
+agency watch
+agency watch --interval 1800          # poll every 30 minutes
+agency watch --max-open-issues 5      # pause analysis when 5+ issues await review
 ```
 
 Each cycle:

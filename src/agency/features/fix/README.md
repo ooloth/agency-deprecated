@@ -10,12 +10,12 @@ Two modes:
 
 ```bash
 # Fix all ready-to-fix issues
-agent-loop fix
+agency fix
 
 # Fix a specific issue
-agent-loop fix --issue 42
+agency fix --issue 42
 
 # Fix from a spec file or prompt (no issue tracking)
-agent-loop fix --file spec.md
-agent-loop fix --prompt 'handle edge case in parser'
+agency fix --file spec.md
+agency fix --prompt 'handle edge case in parser'
 ```
