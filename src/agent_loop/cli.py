@@ -57,6 +57,11 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Show debug output (subprocess commands, timing)",
     )
+    parser.add_argument(
+        "--log-file",
+        type=Path,
+        help="Override the default log file path (.logs/<date>-<command>.log)",
+    )
 
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -205,9 +210,14 @@ def main() -> None:
     """Parse CLI arguments and dispatch to the requested feature command."""
     parser = _build_parser()
     args = parser.parse_args()
-    configure_logging(verbose=args.verbose)
 
     project_dir = args.project_dir.resolve()
+    configure_logging(
+        verbose=args.verbose,
+        command=args.command,
+        project_dir=project_dir,
+        log_file=args.log_file,
+    )
     config = load_config(project_dir)
     ctx = AppContext(
         project_dir=project_dir,

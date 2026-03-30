@@ -1,3 +1,6 @@
 # Theirs
 __pycache__/
 .trekker
+
+# Ours
+.logs/
