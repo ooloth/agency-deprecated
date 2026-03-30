@@ -52,20 +52,20 @@ def cmd_fix(
     if issue_number:
         issue = ctx.tracker.get_issue(issue_number)
         if issue is None:
-            log(f"⚠️  Issue #{issue_number} not found. Skipping.")
+            log.info("⚠️  Issue #%d not found. Skipping.", issue_number)
             return
         if not ctx.tracker.is_ready_to_fix(issue):
-            log(f"⚠️  Issue #{issue_number} is not labeled 'ready-to-fix'. Skipping.")
+            log.info("⚠️  Issue #%d is not labeled 'ready-to-fix'. Skipping.", issue_number)
             return
         if ctx.tracker.is_claimed(issue):
-            log(f"⚠️  Issue #{issue_number} already has 'agent-fix-in-progress'. Skipping.")
+            log.info("⚠️  Issue #%d already has 'agent-fix-in-progress'. Skipping.", issue_number)
             return
         issues = [issue]
     else:
         issues = ctx.tracker.list_ready_issues()
 
     if not issues:
-        log("💤 No issues ready to fix")
+        log.info("💤 No issues ready to fix")
         return
 
     for issue in issues:
@@ -82,7 +82,7 @@ def fix_single_issue(
     """Fix a single issue with the review loop."""
     work = from_issue(issue)
     fix_start = time.monotonic()
-    log(f"🔧 #{issue.number} {issue.title}")
+    log.info("🔧 #%d %s", issue.number, issue.title)
 
     with BranchSession(issue, ctx.tracker, ctx.vcs) as session:
         strategy = AntagonisticStrategy(

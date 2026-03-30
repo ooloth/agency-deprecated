@@ -66,7 +66,7 @@ def cmd_ralph(
 
     branch = f"ralph/{_slugify(work.title)}"
 
-    log(f"🔁 Ralph: {work.title}")
+    log.info("🔁 Ralph: %s", work.title)
 
     default_branch = ctx.tracker.get_default_branch()
     ctx.vcs.checkout(default_branch)
