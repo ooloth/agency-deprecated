@@ -77,6 +77,9 @@ Run `/analyze-spec-drift` to detect these conditions and get recommendations.
 | Spec | Covers |
 |---|---|
 | [architecture.md](architecture.md) | Layered architecture, file structure, feature pipelines, domain types |
-| [agent-backend.md](agent-backend.md) | `AgentBackend` protocol — the AI execution port |
+| [loop-engine.md](loop-engine.md) | Loop engine — strategy protocol, strategies, termination, progress events |
+| [fix.md](fix.md) | Fix pipeline — both modes, BranchSession, guards, review trail |
+| [ralph.md](ralph.md) | Ralph pipeline — fresh-eyes loop, scratchpad, completion signaling |
+| [agent-backend.md](agent-backend.md) | `AgentBackend` / `InteractiveAgentBackend` protocols — the AI execution ports |
 | [vcs-backend.md](vcs-backend.md) | `VCSBackend` protocol — the version-control port |
 | [issue-tracker.md](issue-tracker.md) | `IssueTracker` protocol — the issue-platform port |
