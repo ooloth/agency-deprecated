@@ -23,8 +23,8 @@ Agency is a meta-harness that runs other AI coding agents through automated mult
 graph TD
     CLI["<b>Entrypoints</b><br/>CLI"]
     CLI --> Pipelines["<b>Feature Pipelines</b><br/>analyze · fix · plan · ralph · watch"]
-    Pipelines --> Engine["<b>Domain Engine</b><br/>loop_until_done()"]
-    Pipelines --> Ports["<b>Ports / Protocols</b><br/>AgentBackend · VCSBackend · IssueTracker"]
+    Pipelines --> Strategies["<b>Loop Strategies</b><br/>AntagonisticStrategy · RalphStrategy"]
+    Pipelines --> Ports["<b>Ports</b><br/>AgentBackend · VCSBackend · IssueTracker"]
     Ports --> Adapters["<b>Adapters</b><br/>ClaudeCliBackend · GitBackend · GitHubTracker"]
 ```
 
