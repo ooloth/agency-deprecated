@@ -3,7 +3,8 @@
 > [!CAUTION]
 > **Agency is a research project. If your name is not Michael Uloth, do not use it.**
 >
-> This software may change or break without notice. No support or warranty is provided. Use at your own risk.
+> This software may change or break without notice. No support or warranty is provided.
+> Use at your own risk.
 
 ## Overview
 
@@ -28,13 +29,13 @@ graph TD
     Ports --> Adapters["<b>Adapters</b><br/>ClaudeCliBackend · GitBackend · GitHubTracker"]
 ```
 
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the domain engine, feature pipelines, and domain types in detail.
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for more detail.
 
 ## Configuration
 
-Drop a `.agency/config.yml` in your project root to customize behavior. All
-fields are optional — sensible defaults are built in. See the `Config` type in
-[`ARCHITECTURE.md`](ARCHITECTURE.md#domain-types) for the full schema.
+Optionally add a `.agency/config.yml` in your project root to customize behavior.
+All fields are optional — sensible defaults are built in. See the `Config` type
+in [`ARCHITECTURE.md`](ARCHITECTURE.md#domain-types) for the full schema.
 
 ## Inspiration
 
