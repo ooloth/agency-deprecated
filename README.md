@@ -12,7 +12,7 @@ Agency is a meta-harness that runs other AI coding agents through automated mult
 ## Features
 
 - **[analyze](src/agency/features/analyze/)** — scan a codebase for issues and file them in the tracker
-- **[fix](src/agency/features/fix/)** — pick up tracked issues (or ad-hoc specs), run an implement→review loop, open PRs
+- **[fix](src/agency/features/fix/)** — pick up tracked issues (or ad-hoc specs), run implement→review loops, open PRs
 - **[watch](src/agency/features/watch/)** — continuous loop: fix ready issues, analyze when the queue is low, sleep
 - **[plan](src/agency/features/plan/)** — interactive session to explore a codebase and produce a structured plan
 - **[ralph](src/agency/features/ralph/)** — iterative fresh-eyes refinement toward a goal, committing per iteration
