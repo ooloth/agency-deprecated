@@ -9,6 +9,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from agency.domain.errors import invariant
 from agency.domain.models.issues import Issue
 
 
@@ -34,6 +35,7 @@ def from_prompt(prompt: str) -> WorkSpec:
 
     Title is a truncation for log display; body is the full prompt.
     """
+    invariant(prompt.strip() != "", "prompt should never be blank", prompt=prompt)
     max_title = 60
     title = prompt[:max_title].rstrip() + "…" if len(prompt) > max_title else prompt
     return WorkSpec(title=title, body=prompt)

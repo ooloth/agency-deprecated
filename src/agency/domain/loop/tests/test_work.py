@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from agency.domain.errors import InvariantError
 from agency.domain.loop.work import from_file, from_prompt
 
 
@@ -25,6 +26,14 @@ class TestFromPrompt:
         work = from_prompt(prompt)
         assert work.title == prompt
         assert "…" not in work.title
+
+    def test_empty_prompt_raises(self) -> None:
+        with pytest.raises(InvariantError, match="prompt should never be blank"):
+            from_prompt("")
+
+    def test_whitespace_only_prompt_raises(self) -> None:
+        with pytest.raises(InvariantError, match="prompt should never be blank"):
+            from_prompt("   ")
 
 
 class TestFromFile:
