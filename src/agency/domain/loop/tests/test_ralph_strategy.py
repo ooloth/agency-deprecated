@@ -163,6 +163,6 @@ class TestRalphStrategyInvariants:
         work = WorkSpec(title="test", body="goal")
 
         with pytest.raises(
-            InvariantError, match=r"max_iterations should be at least 1 \(max_iterations=0\)"
+            InvariantError, match=r"max_iterations should never be < 1 \(max_iterations=0\)"
         ):
             loop_until_done(work, strategy, StubVCS(), LoopOptions(max_iterations=0))

@@ -147,7 +147,7 @@ class AntagonisticStrategy:
         context = options.context
         invariant(
             max_iterations >= 1,
-            "max_iterations should be at least 1",
+            "max_iterations should never be < 1",
             max_iterations=max_iterations,
         )
 
@@ -308,7 +308,7 @@ class RalphStrategy:
         context = options.context
         invariant(
             max_iterations >= 1,
-            "max_iterations should be at least 1",
+            "max_iterations should never be < 1",
             max_iterations=max_iterations,
         )
         converged = False

@@ -5,18 +5,20 @@ class InvariantError(RuntimeError):
     """A programmer assumption was found to be false at runtime."""
 
 
-def invariant(condition: bool, assumption: str, **values: object) -> None:  # noqa: FBT001
+def invariant(condition: bool, rule: str, **values: object) -> None:  # noqa: FBT001
     """Raise InvariantError if condition is False.
 
-    assumption should describe what is expected to be true, e.g.
-    'max_iterations should be at least 1'. Pass variables involved in the
-    condition as keyword arguments to include their runtime values, e.g.
-    invariant(max_iterations >= 1, "max_iterations should be at least 1",
-              max_iterations=max_iterations)
+    rule: state the violated constraint using "should never", e.g.
+        "max_iterations should never be < 1"
+
+    values: variables involved in the condition, included in the error
+        message as key=value pairs to surface the failing runtime state, e.g.
+        invariant(max_iterations >= 1, "...", max_iterations=max_iterations)
+        → InvariantError: max_iterations should never be < 1 (max_iterations=0)
     """
     if not condition:
         detail = ", ".join(f"{k}={v!r}" for k, v in values.items())
-        message = f"{assumption} ({detail})" if detail else assumption
+        message = f"{rule} ({detail})" if detail else rule
         raise InvariantError(message)
 
 

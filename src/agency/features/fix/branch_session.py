@@ -64,7 +64,7 @@ class BranchSession:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        invariant(self._default_branch != "", "_default_branch should be set")
+        invariant(self._default_branch != "", "__exit__ should never be called before __enter__")
         log.debug("BranchSession: exiting %s, pushed=%s", self._branch, self._pushed)
         try:
             self._vcs.checkout(self._default_branch)
@@ -84,7 +84,9 @@ class BranchSession:
 
     def commit_and_push(self) -> None:
         """Commit all staged changes and push the fix branch."""
-        invariant(self._default_branch != "", "_default_branch should be set")
+        invariant(
+            self._default_branch != "", "commit_and_push should never be called before __enter__"
+        )
         number = self._issue.number
         title = self._issue.title
         self._vcs.commit(f"fix: address issue #{number} - {title}")
