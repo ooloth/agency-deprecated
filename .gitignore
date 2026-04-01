@@ -1,6 +1,7 @@
 # Theirs
+# .beads/
+.trekker/
 __pycache__/
-.trekker
 
 # Ours
 .logs/
