@@ -1,9 +1,10 @@
 # agency
 
-Three packages, each with a distinct role:
+Four packages, layered top-to-bottom:
 
-- **`domain/`** — shared types and contracts (the _what_)
-- **`io/`** — shared infrastructure and adapters (the _how_)
-- **`features/`** — vertical slices that compose them (the _when_ and _why_)
+- **`entrypoints/`** — composition roots that wire backends and dispatch to features (CLI today, more later)
+- **`features/`** — vertical slices that orchestrate domain logic and ports
+- **`io/`** — adapters, transports, config bootstrap, and observability
+- **`domain/`** — engine, strategies, ports, models, and errors
 
 See `ARCHITECTURE.md` at the repo root for the architectural rationale.
