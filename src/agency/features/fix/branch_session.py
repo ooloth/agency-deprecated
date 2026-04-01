@@ -7,7 +7,7 @@ can focus on the issue-resolution logic rather than branch bookkeeping.
 from types import TracebackType
 from typing import Self
 
-from agency.domain.errors import AgentLoopError
+from agency.domain.errors import AgentLoopError, invariant
 from agency.domain.models.issues import Issue
 from agency.domain.ports.issue_tracker import IssueTracker
 from agency.domain.ports.vcs_backend import VCSBackend
@@ -64,6 +64,9 @@ class BranchSession:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
+        invariant(
+            self._default_branch != "", "BranchSession.__exit__ called outside context manager"
+        )
         log.debug("BranchSession: exiting %s, pushed=%s", self._branch, self._pushed)
         try:
             self._vcs.checkout(self._default_branch)
@@ -83,6 +86,10 @@ class BranchSession:
 
     def commit_and_push(self) -> None:
         """Commit all staged changes and push the fix branch."""
+        invariant(
+            self._default_branch != "",
+            "BranchSession.commit_and_push() called outside context manager",
+        )
         number = self._issue.number
         title = self._issue.title
         self._vcs.commit(f"fix: address issue #{number} - {title}")

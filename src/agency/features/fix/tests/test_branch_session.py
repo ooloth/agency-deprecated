@@ -2,6 +2,7 @@
 
 import pytest
 
+from agency.domain.errors import InvariantError
 from agency.domain.ports.tests.stubs import StubTracker, StubVCS, make_issue
 from agency.features.fix.branch_session import BranchSession
 
@@ -52,6 +53,22 @@ class TestBranchSessionSuccess:
 
         with BranchSession(issue, tracker, vcs) as session:
             assert session.branch == "fix/issue-99"
+
+
+class TestBranchSessionInvariants:
+    def test_commit_and_push_outside_context_manager_raises(self) -> None:
+        issue = make_issue(number=1)
+        session = BranchSession(issue, StubTracker(), StubVCS())
+
+        with pytest.raises(InvariantError, match="outside context manager"):
+            session.commit_and_push()
+
+    def test_exit_outside_context_manager_raises(self) -> None:
+        issue = make_issue(number=1)
+        session = BranchSession(issue, StubTracker(), StubVCS())
+
+        with pytest.raises(InvariantError, match="outside context manager"):
+            session.__exit__(None, None, None)
 
 
 class TestBranchSessionCleanup:

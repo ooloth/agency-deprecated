@@ -1,5 +1,8 @@
 """Tests for RalphStrategy via loop_until_done."""
 
+import pytest
+
+from agency.domain.errors import InvariantError
 from agency.domain.loop.engine import (
     EngineEvent,
     LoopOptions,
@@ -152,3 +155,12 @@ class TestRalphStrategy:
         assert result.converged is True
         # Second prompt should NOT have scratchpad context (first response had none)
         assert "previous iteration" not in agent.prompts[1]
+
+
+class TestRalphStrategyInvariants:
+    def test_max_iterations_zero_raises(self) -> None:
+        strategy = RalphStrategy(agent=StubAgent([]), prompt_template=TEMPLATE)
+        work = WorkSpec(title="test", body="goal")
+
+        with pytest.raises(InvariantError, match="max_iterations must be at least 1"):
+            loop_until_done(work, strategy, StubVCS(), LoopOptions(max_iterations=0))
