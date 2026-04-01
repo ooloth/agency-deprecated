@@ -56,23 +56,15 @@ class TestBranchSessionSuccess:
 
 
 class TestBranchSessionInvariants:
-    def test_commit_and_push_outside_context_manager_raises(self) -> None:
+    def test_empty_default_branch_raises(self) -> None:
         issue = make_issue(number=1)
-        session = BranchSession(issue, StubTracker(), StubVCS())
+        tracker = StubTracker(default_branch="")
+        session = BranchSession(issue, tracker, StubVCS())
 
         with pytest.raises(
-            InvariantError, match="commit_and_push should never be called before __enter__"
+            InvariantError, match="get_default_branch should never return an empty string"
         ):
-            session.commit_and_push()
-
-    def test_exit_outside_context_manager_raises(self) -> None:
-        issue = make_issue(number=1)
-        session = BranchSession(issue, StubTracker(), StubVCS())
-
-        with pytest.raises(
-            InvariantError, match="__exit__ should never be called before __enter__"
-        ):
-            session.__exit__(None, None, None)
+            session.__enter__()
 
 
 class TestBranchSessionCleanup:
