@@ -5,14 +5,19 @@ class InvariantError(RuntimeError):
     """A programmer assumption was found to be false at runtime."""
 
 
-def invariant(condition: bool, assumption: str) -> None:  # noqa: FBT001
+def invariant(condition: bool, assumption: str, **values: object) -> None:  # noqa: FBT001
     """Raise InvariantError if condition is False.
 
-    assumption should be phrased to describe what "should" to be true, e.g.
-    'default_branch should be set', 'max_iterations should be at least 1'.
+    assumption should describe what is expected to be true, e.g.
+    'max_iterations should be at least 1'. Pass variables involved in the
+    condition as keyword arguments to include their runtime values, e.g.
+    invariant(max_iterations >= 1, "max_iterations should be at least 1",
+              max_iterations=max_iterations)
     """
     if not condition:
-        raise InvariantError(assumption)
+        detail = ", ".join(f"{k}={v!r}" for k, v in values.items())
+        message = f"{assumption} ({detail})" if detail else assumption
+        raise InvariantError(message)
 
 
 class AgentLoopError(Exception):
