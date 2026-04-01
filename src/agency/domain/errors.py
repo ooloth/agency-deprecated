@@ -17,9 +17,9 @@ def invariant(condition: bool, rule: str, **values: object) -> None:  # noqa: FB
 
     rule: state the violated constraint using "should never", e.g. "max should never be < 1"
 
-    values: variables involved in the condition, optionally included in the error message as
-        key=value pairs to surface the bad runtime state, e.g. invariant(max >= 1, "...", max=max)
-        → InvariantError: max should never be < 1 (max=0)
+    values: variables involved in the condition, optionally included in the error message
+        as key=value pairs to make debugging the bad runtime state easier - for example:
+        invariant(max >= 1, "...", max=max) → InvariantError: max should never be < 1 (max=0)
     """
     if not condition:
         detail = ", ".join(f"{k}={v!r}" for k, v in values.items())
