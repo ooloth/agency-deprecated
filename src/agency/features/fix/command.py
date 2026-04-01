@@ -14,7 +14,7 @@ import time
 from collections.abc import Callable
 
 from agency.domain.context import AppContext
-from agency.domain.errors import AgentLoopError
+from agency.domain.errors import AgentLoopError, invariant
 from agency.domain.loop.engine import (
     AddressedFeedback,
     DiffReady,
@@ -70,7 +70,9 @@ def _make_progress_logger(
 def _slugify(text: str, max_len: int = 50) -> str:
     """Convert text to a branch-name-safe slug."""
     slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
-    return slug[:max_len].rstrip("-")
+    result = slug[:max_len].rstrip("-")
+    invariant(result != "", "slug should never be empty", text=text)
+    return result
 
 
 def cmd_fix(

@@ -1,8 +1,20 @@
 """Tests for cmd_fix — issue-based fix pipeline."""
 
+import pytest
+
+from agency.domain.errors import InvariantError
 from agency.domain.ports.tests.stubs import StubAgent, StubTracker, StubVCS, make_issue
-from agency.features.fix.command import cmd_fix
+from agency.features.fix.command import _slugify, cmd_fix
 from agency.features.tests.context import make_ctx
+
+
+class TestSlugify:
+    def test_non_empty_input_produces_slug(self) -> None:
+        assert _slugify("Fix parser bug") == "fix-parser-bug"
+
+    def test_all_punctuation_raises(self) -> None:
+        with pytest.raises(InvariantError, match="slug should never be empty"):
+            _slugify("!!!")
 
 
 class TestCmdFix:
