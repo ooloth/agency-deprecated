@@ -10,12 +10,12 @@ class TestInvariant:
         x = 1
         invariant(x > 0, "should not raise")
 
-    def test_raises_invariant_violation_when_condition_is_false(self) -> None:
+    def test_raises_invariant_error_when_condition_is_false(self) -> None:
         x = -1
         with pytest.raises(InvariantError, match="x must be positive"):
             invariant(x > 0, "x must be positive")
 
-    def test_invariant_violation_is_runtime_error(self) -> None:
+    def test_invariant_error_is_runtime_error(self) -> None:
         x = -1
         with pytest.raises(RuntimeError):
             invariant(x > 0, "x must be positive")

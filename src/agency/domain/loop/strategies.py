@@ -145,7 +145,7 @@ class AntagonisticStrategy:
         notify = options.on_progress
         max_iterations = options.max_iterations
         context = options.context
-        invariant(max_iterations >= 1, "max_iterations must be at least 1")
+        invariant(max_iterations >= 1, "max_iterations should be at least 1")
 
         # Initial implementation
         fix_prompt = self._fix_prompt_template.format(title=work.title, body=work.body)
@@ -302,7 +302,7 @@ class RalphStrategy:
         notify = options.on_progress
         max_iterations = options.max_iterations
         context = options.context
-        invariant(max_iterations >= 1, "max_iterations must be at least 1")
+        invariant(max_iterations >= 1, "max_iterations should be at least 1")
         converged = False
         iteration = 0
         has_changes = False

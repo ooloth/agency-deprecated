@@ -22,5 +22,5 @@ class TestAntagonisticStrategyInvariants:
         )
         work = WorkSpec(title="test", body="do something")
 
-        with pytest.raises(InvariantError, match="max_iterations must be at least 1"):
+        with pytest.raises(InvariantError, match="max_iterations should be at least 1"):
             loop_until_done(work, strategy, StubVCS(), LoopOptions(max_iterations=0))

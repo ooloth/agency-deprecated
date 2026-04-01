@@ -60,14 +60,14 @@ class TestBranchSessionInvariants:
         issue = make_issue(number=1)
         session = BranchSession(issue, StubTracker(), StubVCS())
 
-        with pytest.raises(InvariantError, match="outside context manager"):
+        with pytest.raises(InvariantError, match="_default_branch should be set"):
             session.commit_and_push()
 
     def test_exit_outside_context_manager_raises(self) -> None:
         issue = make_issue(number=1)
         session = BranchSession(issue, StubTracker(), StubVCS())
 
-        with pytest.raises(InvariantError, match="outside context manager"):
+        with pytest.raises(InvariantError, match="_default_branch should be set"):
             session.__exit__(None, None, None)
 
 
