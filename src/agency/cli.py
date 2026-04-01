@@ -7,7 +7,7 @@ from pathlib import Path
 
 from agency.domain.config import Config, resolve_planning_model
 from agency.domain.context import AppContext
-from agency.domain.errors import AgentLoopError
+from agency.domain.errors import AgentLoopError, invariant
 from agency.domain.loop.work import from_file, from_prompt
 from agency.features.analyze.command import cmd_analyze
 from agency.features.fix.command import cmd_fix, fix_from_spec
@@ -203,6 +203,14 @@ def _dispatch(args: argparse.Namespace, ctx: AppContext, config: Config) -> None
             agents,
             interval=args.interval,
             max_open_issues=args.max_open_issues,
+        )
+
+    else:
+        unknown = args.command
+        invariant(
+            unknown is None,
+            "unknown command should never reach _dispatch",
+            command=unknown,
         )
 
 
